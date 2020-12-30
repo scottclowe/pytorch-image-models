@@ -365,6 +365,8 @@ def main():
 
     # move model to GPU, enable channels last layout if set
     model.cuda()
+    if args.tl is not None:
+        pre_model.cuda()
     if args.channels_last:
         model = model.to(memory_format=torch.channels_last)
 
