@@ -38,4 +38,4 @@ echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
 #python train.py /imagenet/ --model efficientnet_b0 -b 384 --sched step --epochs 450 --decay-epochs 2.4 --decay-rate .97 --opt rmsproptf --opt-eps .001 -j 8 --warmup-lr 1e-6 --weight-decay 1e-5 --drop 0.2 --drop-connect 0.2 --model-ema --model-ema-decay 0.9999 --aa rand-m9-mstd0.5 --remode pixel --reprob 0.2 --amp --lr .048
-python validate.py /scratch/ssd001/datasets/imagenet/val/ --model tf_efficientnet_b0 --checkpoint efficientnet-b0
+python validate.py /scratch/ssd001/datasets/imagenet/val/ --model tf_efficientnet_b0 --checkpoint efficientnet-b0/model.ckpt.data-00000-of-00001
