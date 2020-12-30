@@ -35,6 +35,7 @@ from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy, JsdCro
 from timm.optim import create_optimizer
 from timm.scheduler import create_scheduler
 from timm.utils import ApexScaler, NativeScaler
+from pprint import pprint
 
 try:
     from apex import amp
@@ -108,8 +109,6 @@ parser.add_argument('--weight-decay', type=float, default=0.0001,
                     help='weight decay (default: 0.0001)')
 parser.add_argument('--clip-grad', type=float, default=None, metavar='NORM',
                     help='Clip gradient norm (default: None, no clipping)')
-
-
 
 # Learning rate schedule parameters
 parser.add_argument('--sched', default='step', type=str, metavar='SCHEDULER',
@@ -226,7 +225,7 @@ parser.add_argument('--seed', type=int, default=42, metavar='S',
                     help='random seed (default: 42)')
 parser.add_argument('--log-interval', type=int, default=50, metavar='N',
                     help='how many batches to wait before logging training status')
-parser.add_argument('--recovery-interval', type=int, default=0, metavar='N',
+parser.add_argument('--recovery-interval', type=int, default=50, metavar='N',
                     help='how many batches to wait before writing recovery checkpoint')
 parser.add_argument('-j', '--workers', type=int, default=4, metavar='N',
                     help='how many training processes to use (default: 1)')
@@ -255,6 +254,10 @@ parser.add_argument('--use-multi-epochs-loader', action='store_true', default=Fa
                     help='use the multi-epochs-loader to save time at the beginning of every epoch')
 parser.add_argument('--torchscript', dest='torchscript', action='store_true',
                     help='convert model torchscript for inference')
+
+# Bob's arguments
+parser.add_argument('--tl', action='store_true', default=False,
+                    help='When true, only trains last two layers of network')
 
 
 def _parse_args():
@@ -330,6 +333,19 @@ def main():
         scriptable=args.torchscript,
         checkpoint_path=args.initial_checkpoint)
 
+    if args.tl:
+        model_layers = list(model.children())
+        intro_layers = model_layers[:3]
+        outro_layers = model_layers[4:]
+        main_layers = list(model_layers[3])
+
+        model1_layers = intro_layers + main_layers[:-1]
+        pre_model = torch.nn.Sequential(*model1_layers)
+        model2_layers = main_layers[-1:] + outro_layers
+        model = torch.nn.Sequential(*model2_layers)
+    else:
+        pre_model = None
+
     if args.local_rank == 0:
         _logger.info('Model %s created, param count: %d' %
                      (args.model, sum([m.numel() for m in model.parameters()])))
@@ -391,7 +407,7 @@ def main():
 
     # optionally resume from a checkpoint
     resume_epoch = None
-    if args.resume:
+    if args.resume and os.path.exists(args.resume):
         resume_epoch = resume_checkpoint(
             model, args.resume,
             optimizer=None if args.no_resume_opt else optimizer,
@@ -404,7 +420,7 @@ def main():
         # Important to create EMA model after cuda(), DP wrapper, and AMP but before SyncBN and DDP wrapper
         model_ema = ModelEmaV2(
             model, decay=args.model_ema_decay, device='cpu' if args.model_ema_force_cpu else None)
-        if args.resume:
+        if args.resume and os.path.exists(args.resume):
             load_checkpoint(model_ema.module, args.resume, use_ema=True)
 
     # setup distributed training
@@ -545,7 +561,7 @@ def main():
         decreasing = True if eval_metric == 'loss' else False
         saver = CheckpointSaver(
             model=model, optimizer=optimizer, args=args, model_ema=model_ema, amp_scaler=loss_scaler,
-            checkpoint_dir=output_dir, recovery_dir=output_dir, decreasing=decreasing)
+            checkpoint_dir=output_dir, recovery_dir=args.resume, decreasing=decreasing)
         with open(os.path.join(output_dir, 'args.yaml'), 'w') as f:
             f.write(args_text)
 
@@ -557,7 +573,8 @@ def main():
             train_metrics = train_epoch(
                 epoch, model, loader_train, optimizer, train_loss_fn, args,
                 lr_scheduler=lr_scheduler, saver=saver, output_dir=output_dir,
-                amp_autocast=amp_autocast, loss_scaler=loss_scaler, model_ema=model_ema, mixup_fn=mixup_fn)
+                amp_autocast=amp_autocast, loss_scaler=loss_scaler, model_ema=model_ema, mixup_fn=mixup_fn,
+                pre_model=pre_model)
 
             if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
                 if args.local_rank == 0:
@@ -595,7 +612,7 @@ def main():
 def train_epoch(
         epoch, model, loader, optimizer, loss_fn, args,
         lr_scheduler=None, saver=None, output_dir='', amp_autocast=suppress,
-        loss_scaler=None, model_ema=None, mixup_fn=None):
+        loss_scaler=None, model_ema=None, mixup_fn=None, pre_model=None):
 
     if args.mixup_off_epoch and epoch >= args.mixup_off_epoch:
         if args.prefetcher and loader.mixup_enabled:
@@ -624,6 +641,9 @@ def train_epoch(
             input = input.contiguous(memory_format=torch.channels_last)
 
         with amp_autocast():
+            if pre_model is not None:
+                with torch.no_grad():
+                    input = pre_model(input)
             output = model(input)
             loss = loss_fn(output, target)
 

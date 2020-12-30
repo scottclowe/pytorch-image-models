@@ -8,8 +8,8 @@
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=64:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0%1                    # array value
-#SBATCH --output=logs_new/test/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=test
+#SBATCH --output=logs_new/p1_eff_baseline_tl/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=p1_eff_baseline_tl
 
 source ~/.bashrc
 source activate ~/venvs/efficientnet_train
@@ -18,7 +18,7 @@ SAVE_PATH="$1"
 SEED="$SLURM_ARRAY_TASK_ID"
 
 touch /checkpoint/robearle/${SLURM_JOB_ID}
-CHECK_DIR=/checkpoint/robearle/${SLURM_JOB_ID}
+CHECK_PATH=/checkpoint/robearle/${SLURM_JOB_ID}
 
 # Debugging outputs
 pwd
@@ -38,5 +38,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-#python train.py /imagenet/ --model efficientnet_b0 -b 384 --sched step --epochs 450 --decay-epochs 2.4 --decay-rate .97 --opt rmsproptf --opt-eps .001 -j 8 --warmup-lr 1e-6 --weight-decay 1e-5 --drop 0.2 --drop-connect 0.2 --model-ema --model-ema-decay 0.9999 --aa rand-m9-mstd0.5 --remode pixel --reprob 0.2 --amp --lr .048
-python validate.py /scratch/ssd001/datasets/imagenet/val/ --model tf_efficientnet_b0 --pretrained --tf-preprocessing
+python validate.py /scratch/ssd001/datasets/imagenet/val/ --model tf_efficientnet_b0 --pretrained --tf-preprocessing --tl --output $SAVE_PATH --resume $CHECK_PATH
