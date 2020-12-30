@@ -1,3 +1,7 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 """ Tensorflow Preprocessing Adapter
 
 Allows use of Tensorflow preprocessing pipeline in PyTorch Transform
@@ -22,9 +26,6 @@ Hacked together by / Copyright 2020 Ross Wightman
 # limitations under the License.
 # ==============================================================================
 """ImageNet preprocessing for MnasNet."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import tensorflow as tf
 import numpy as np
