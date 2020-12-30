@@ -32,6 +32,7 @@ python -c "import torch.cuda; print('cuda = {}'.format(torch.cuda.is_available()
 python -c "import scipy; print('scipy version = {}'.format(scipy.__version__))"
 python -c "import sklearn; print('sklearn version = {}'.format(sklearn.__version__))"
 python -c "import matplotlib; print('matplotlib version = {}'.format(matplotlib.__version__))"
+python -c "import tensorflow; print('tensorflow version = {}'.format(tensorflow.__version__))"
 echo ""
 
 echo "SAVE_PATH=$SAVE_PATH"
