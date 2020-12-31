@@ -8,8 +8,8 @@
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=64:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0%1                    # array value
-#SBATCH --output=logs_new/p1_eff_baseline_tl/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=p1_eff_baseline_tl
+#SBATCH --output=logs_new/p1_eff_baseline_tl_test/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=p1_eff_baseline_tl_test
 
 source ~/.bashrc
 source activate ~/venvs/efficientnet_train
@@ -38,4 +38,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python train.py /scratch/ssd001/datasets/imagenet/ --model tf_efficientnet_b0 --pretrained --tl --output $SAVE_PATH --resume $CHECK_PATH
+python train.py /scratch/ssd001/datasets/imagenet/ --model tf_efficientnet_b0 --pretrained --tl --output $SAVE_PATH --resume $CHECK_PATH --epochs 1
