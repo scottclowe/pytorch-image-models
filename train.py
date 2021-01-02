@@ -524,17 +524,12 @@ def main():
         crop_pct=data_config['crop_pct'],
         pin_memory=args.pin_mem,
     )
-
-    print(loader_train)
-    print(len(loader_train.dataset))
-    print("asdflj"+234)
-
     # setup learning rate schedule and starting epoch
     if args.tl:
         lr_scheduler = OneCycleLR(optimizer,
                                   max_lr=args.lr,
                                   epochs=args.epochs,
-                                  # steps_per_epoch=int(math.floor(sample_size / args.batch_size)),
+                                  steps_per_epoch=int(math.floor(len(loader_train.dataset) / args.batch_size)),
                                   cycle_momentum=False
                                   )
         num_epochs = args.epochs
