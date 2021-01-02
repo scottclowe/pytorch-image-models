@@ -223,7 +223,7 @@ class InvertedResidual(nn.Module):
         # Point-wise expansion
         self.conv_pw = create_conv2d(in_chs, mid_chs, exp_kernel_size, padding=pad_type, **conv_kwargs)
         self.bn1 = norm_layer(mid_chs, **norm_kwargs)
-        print(self.conv_pw)
+        # print(self.conv_pw)
         self.act1 = act_layer(inplace=True)
 
         # Depth-wise convolution
