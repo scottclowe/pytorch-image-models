@@ -450,40 +450,6 @@ def main():
         _logger.error('Training folder does not exist at: {}'.format(train_dir))
         exit(1)
     dataset_train = Dataset(train_dir)
-    print(dataset_train)
-    print("234i2" + 234)
-
-    # setup learning rate schedule and starting epoch
-    if args.tl:
-        lr_scheduler = OneCycleLR(optimizer,
-                               max_lr=args.lr,
-                               epochs=args.epochs,
-                               # steps_per_epoch=int(math.floor(sample_size / args.batch_size)),
-                               cycle_momentum=False
-                               )
-        num_epochs = args.epochs
-    else:
-        lr_scheduler, num_epochs = create_scheduler(args, optimizer)
-    start_epoch = 0
-    if args.start_epoch is not None:
-        # a specified start_epoch will always override the resume epoch
-        start_epoch = args.start_epoch
-    elif resume_epoch is not None:
-        start_epoch = resume_epoch
-    if lr_scheduler is not None and start_epoch > 0:
-        lr_scheduler.step(start_epoch)
-
-    if args.local_rank == 0:
-        _logger.info('Scheduled epochs: {}'.format(num_epochs))
-
-    # # create the train and eval datasets
-    # train_dir = os.path.join(args.data, 'train')
-    # if not os.path.exists(train_dir):
-    #     _logger.error('Training folder does not exist at: {}'.format(train_dir))
-    #     exit(1)
-    # dataset_train = Dataset(train_dir)
-    # print(dataset_train)
-    # print("234i2"+234)
 
     eval_dir = os.path.join(args.data, 'val')
     if not os.path.isdir(eval_dir):
@@ -558,6 +524,33 @@ def main():
         crop_pct=data_config['crop_pct'],
         pin_memory=args.pin_mem,
     )
+
+    print(loader_train)
+    print(len(loader_train.dataset))
+    print("asdflj"+234)
+
+    # setup learning rate schedule and starting epoch
+    if args.tl:
+        lr_scheduler = OneCycleLR(optimizer,
+                                  max_lr=args.lr,
+                                  epochs=args.epochs,
+                                  # steps_per_epoch=int(math.floor(sample_size / args.batch_size)),
+                                  cycle_momentum=False
+                                  )
+        num_epochs = args.epochs
+    else:
+        lr_scheduler, num_epochs = create_scheduler(args, optimizer)
+    start_epoch = 0
+    if args.start_epoch is not None:
+        # a specified start_epoch will always override the resume epoch
+        start_epoch = args.start_epoch
+    elif resume_epoch is not None:
+        start_epoch = resume_epoch
+    if lr_scheduler is not None and start_epoch > 0:
+        lr_scheduler.step(start_epoch)
+
+    if args.local_rank == 0:
+        _logger.info('Scheduled epochs: {}'.format(num_epochs))
 
     # setup loss function
     if args.jsd:
