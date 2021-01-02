@@ -38,4 +38,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python train.py /scratch/ssd001/datasets/imagenet/ --model tf_efficientnet_b0 --pretrained --tl --output $SAVE_PATH --resume $CHECK_PATH --epochs 1
+python train.py /scratch/ssd001/datasets/imagenet/ --model tf_efficientnet_b0 --pretrained --tl --output $SAVE_PATH --resume $CHECK_PATH --epochs 2 --amp

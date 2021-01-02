@@ -22,11 +22,13 @@ import logging
 from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime
+import math
 
 import torch
 import torch.nn as nn
 import torchvision.utils
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
+from torch.optim.lr_scheduler import OneCycleLR
 
 from timm.data import Dataset, create_loader, resolve_data_config, Mixup, FastCollateMixup, AugMixDataset
 from timm.models import create_model, resume_checkpoint, load_checkpoint, convert_splitbn_model
@@ -129,7 +131,7 @@ parser.add_argument('--warmup-lr', type=float, default=0.0001, metavar='LR',
                     help='warmup learning rate (default: 0.0001)')
 parser.add_argument('--min-lr', type=float, default=1e-5, metavar='LR',
                     help='lower lr bound for cyclic schedulers that hit 0 (1e-5)')
-parser.add_argument('--epochs', type=int, default=200, metavar='N',
+parser.add_argument('--epochs', type=int, default=2, metavar='N',
                     help='number of epochs to train (default: 2)')
 parser.add_argument('--start-epoch', default=None, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
@@ -346,6 +348,10 @@ def main():
     else:
         pre_model = None
 
+    # optimizer = create_optimizer(args, model)
+    # lr_scheduler, num_epochs = create_scheduler(args, optimizer)
+    # print(num_epochs)
+
     if args.local_rank == 0:
         _logger.info('Model %s created, param count: %d' %
                      (args.model, sum([m.numel() for m in model.parameters()])))
@@ -364,11 +370,11 @@ def main():
         model = convert_splitbn_model(model, max(num_aug_splits, 2))
 
     # move model to GPU, enable channels last layout if set
-    model.cuda()
-    if args.tl is not None:
-        pre_model.cuda()
-    if args.channels_last:
-        model = model.to(memory_format=torch.channels_last)
+    # model.cuda()
+    # if args.tl is not None:
+    #     pre_model.cuda()
+    # if args.channels_last:
+    #     model = model.to(memory_format=torch.channels_last)
 
     # setup synchronized BatchNorm for distributed training
     if args.distributed and args.sync_bn:
@@ -438,8 +444,26 @@ def main():
             model = NativeDDP(model, device_ids=[args.local_rank])  # can use device str in Torch >= 1.1
         # NOTE: EMA model does not need to be wrapped by DDP
 
+    # create the train and eval datasets
+    train_dir = os.path.join(args.data, 'train')
+    if not os.path.exists(train_dir):
+        _logger.error('Training folder does not exist at: {}'.format(train_dir))
+        exit(1)
+    dataset_train = Dataset(train_dir)
+    print(dataset_train)
+    print("234i2" + 234)
+
     # setup learning rate schedule and starting epoch
-    lr_scheduler, num_epochs = create_scheduler(args, optimizer)
+    if args.tl:
+        lr_scheduler = OneCycleLR(optimizer,
+                               max_lr=args.lr,
+                               epochs=args.epochs,
+                               # steps_per_epoch=int(math.floor(sample_size / args.batch_size)),
+                               cycle_momentum=False
+                               )
+        num_epochs = args.epochs
+    else:
+        lr_scheduler, num_epochs = create_scheduler(args, optimizer)
     start_epoch = 0
     if args.start_epoch is not None:
         # a specified start_epoch will always override the resume epoch
@@ -452,12 +476,14 @@ def main():
     if args.local_rank == 0:
         _logger.info('Scheduled epochs: {}'.format(num_epochs))
 
-    # create the train and eval datasets
-    train_dir = os.path.join(args.data, 'train')
-    if not os.path.exists(train_dir):
-        _logger.error('Training folder does not exist at: {}'.format(train_dir))
-        exit(1)
-    dataset_train = Dataset(train_dir)
+    # # create the train and eval datasets
+    # train_dir = os.path.join(args.data, 'train')
+    # if not os.path.exists(train_dir):
+    #     _logger.error('Training folder does not exist at: {}'.format(train_dir))
+    #     exit(1)
+    # dataset_train = Dataset(train_dir)
+    # print(dataset_train)
+    # print("234i2"+234)
 
     eval_dir = os.path.join(args.data, 'val')
     if not os.path.isdir(eval_dir):

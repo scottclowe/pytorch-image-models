@@ -250,6 +250,11 @@ class EfficientNetBuilder:
 
     def _make_block(self, ba, block_idx, block_count):
         drop_path_rate = self.drop_path_rate * block_idx / block_count
+        high_ord = False
+        # if ba['out_chs'] == 320:
+        #     high_ord = True
+        #     print("=========================")
+        #     print(ba)
         bt = ba.pop('block_type')
         ba['in_chs'] = self.in_chs
         ba['out_chs'] = self._round_channels(ba['out_chs'])
@@ -269,7 +274,7 @@ class EfficientNetBuilder:
             if ba.get('num_experts', 0) > 0:
                 block = CondConvResidual(**ba)
             else:
-                block = InvertedResidual(**ba)
+                block = InvertedResidual(**ba, high_ord=high_ord)
         elif bt == 'ds' or bt == 'dsa':
             ba['drop_path_rate'] = drop_path_rate
             ba['se_kwargs'] = self.se_kwargs
@@ -287,6 +292,8 @@ class EfficientNetBuilder:
             assert False, 'Uknkown block type (%s) while building model.' % bt
         self.in_chs = ba['out_chs']  # update in_chs for arg of next block
 
+        # if high_ord:
+        #     print(block)
         return block
 
     def __call__(self, in_chs, model_block_args):

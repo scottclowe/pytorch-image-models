@@ -211,7 +211,7 @@ class InvertedResidual(nn.Module):
                  stride=1, dilation=1, pad_type='', act_layer=nn.ReLU, noskip=False,
                  exp_ratio=1.0, exp_kernel_size=1, pw_kernel_size=1,
                  se_ratio=0., se_kwargs=None, norm_layer=nn.BatchNorm2d, norm_kwargs=None,
-                 conv_kwargs=None, drop_path_rate=0.):
+                 conv_kwargs=None, drop_path_rate=0., high_ord=False):
         super(InvertedResidual, self).__init__()
         norm_kwargs = norm_kwargs or {}
         conv_kwargs = conv_kwargs or {}
@@ -223,6 +223,7 @@ class InvertedResidual(nn.Module):
         # Point-wise expansion
         self.conv_pw = create_conv2d(in_chs, mid_chs, exp_kernel_size, padding=pad_type, **conv_kwargs)
         self.bn1 = norm_layer(mid_chs, **norm_kwargs)
+        print(self.conv_pw)
         self.act1 = act_layer(inplace=True)
 
         # Depth-wise convolution

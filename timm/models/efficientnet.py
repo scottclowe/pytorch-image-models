@@ -350,6 +350,7 @@ class EfficientNet(nn.Module):
             channel_multiplier, channel_divisor, channel_min, output_stride, pad_type, act_layer, se_kwargs,
             norm_layer, norm_kwargs, drop_path_rate, verbose=_DEBUG)
         self.blocks = nn.Sequential(*builder(stem_size, block_args))
+        # print("2341" + 1234)
         self.feature_info = builder.features
         head_chs = builder.in_chs
 
