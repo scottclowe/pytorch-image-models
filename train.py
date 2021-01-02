@@ -721,7 +721,10 @@ def train_epoch(
             saver.save_recovery(epoch, batch_idx=batch_idx)
 
         if lr_scheduler is not None:
-            lr_scheduler.step_update(num_updates=num_updates, metric=losses_m.avg)
+            if args.tl:
+                lr_scheduler.step()
+            else:
+                lr_scheduler.step_update(num_updates=num_updates, metric=losses_m.avg)
 
         end = time.time()
         # end for
