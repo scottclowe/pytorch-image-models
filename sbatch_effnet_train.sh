@@ -8,8 +8,8 @@
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=64:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0%1                    # array value
-#SBATCH --output=logs_new/p1_eff_baseline_tl_test/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=p1_eff_baseline_tl_test
+#SBATCH --output=logs_new/test/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=test
 
 source ~/.bashrc
 source activate ~/venvs/efficientnet_train
