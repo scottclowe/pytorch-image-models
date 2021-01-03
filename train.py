@@ -260,7 +260,7 @@ parser.add_argument('--torchscript', dest='torchscript', action='store_true',
 # Bob's arguments
 parser.add_argument('--tl', action='store_true', default=False,
                     help='When true, only trains last two layers of network')
-parser.add_argument('--actfun', action=str, default='swish',
+parser.add_argument('--actfun', default='swish', type=str, metavar='ACTFUN',
                     help='Controls which activation function is used in the network')
 
 
