@@ -338,6 +338,8 @@ class EfficientNet(nn.Module):
         self.num_features = num_features
         self.drop_rate = drop_rate
 
+        # print(act_layer)
+
         # Stem
         if not fix_stem:
             stem_size = round_channels(stem_size, channel_multiplier, channel_divisor, channel_min)

@@ -23,8 +23,14 @@ def get_outdir(path, *paths, inc=False):
     return outdir
 
 
-def update_summary(epoch, train_metrics, eval_metrics, filename, write_header=False):
-    rowd = OrderedDict(epoch=epoch)
+def update_summary(seed, epoch, lr, epochs, batch_size, actfun,
+                   train_metrics, eval_metrics, filename, write_header=False):
+    rowd = OrderedDict(seed=seed,
+                       lr=lr,
+                       epoch=epoch,
+                       epochs=epochs,
+                       batch_size=batch_size,
+                       actfun=actfun)
     rowd.update([('train_' + k, v) for k, v in train_metrics.items()])
     rowd.update([('eval_' + k, v) for k, v in eval_metrics.items()])
     with open(filename, mode='a') as cf:

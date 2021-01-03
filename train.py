@@ -260,6 +260,8 @@ parser.add_argument('--torchscript', dest='torchscript', action='store_true',
 # Bob's arguments
 parser.add_argument('--tl', action='store_true', default=False,
                     help='When true, only trains last two layers of network')
+parser.add_argument('--actfun', action=str, default='swish',
+                    help='Controls which activation function is used in the network')
 
 
 def _parse_args():
@@ -608,11 +610,13 @@ def main():
                 eval_metrics = ema_eval_metrics
 
             if lr_scheduler is not None:
-                # step LR for next epoch
-                lr_scheduler.step(epoch + 1, eval_metrics[eval_metric])
+                if not args.tl:
+                    # step LR for next epoch
+                    lr_scheduler.step(epoch + 1, eval_metrics[eval_metric])
 
             update_summary(
-                epoch, train_metrics, eval_metrics, os.path.join(output_dir, 'summary.csv'),
+                args.seed, epoch, args.lr, args.epochs, args.batch_size, args.actfun,
+                train_metrics, eval_metrics, os.path.join(output_dir, 'summary.csv'),
                 write_header=best_metric is None)
 
             if saver is not None:
