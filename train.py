@@ -663,6 +663,8 @@ def main():
                 write_header=best_metric is None)
 
             if saver is not None:
+                _logger.info("Saving")
+                saver.save_recovery(epoch)
                 # save proper checkpoint with eval metric
                 save_metric = eval_metrics[eval_metric]
                 best_metric, best_epoch = saver.save_checkpoint(epoch, metric=save_metric)
@@ -755,8 +757,6 @@ def train_epoch(
                         rate_avg=input.size(0) * args.world_size / batch_time_m.avg,
                         lr=lr,
                         data_time=data_time_m))
-                _logger.info("Saving")
-                saver.save_recovery(epoch, batch_idx=batch_idx)
 
                 if args.save_images and output_dir:
                     torchvision.utils.save_image(

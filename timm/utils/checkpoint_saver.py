@@ -101,8 +101,7 @@ class CheckpointSaver:
             'epoch': epoch,
             'arch': type(self.model).__name__.lower(),
             'state_dict': get_state_dict(self.model, self.unwrap_fn),
-            'optimizer': self.optimizer.state_dict(),
-            'version': 2,  # version < 2 increments epoch before save
+            'optimizer': self.optimizer.state_dict()
         }
         if self.args is not None:
             save_state['arch'] = self.args.model
@@ -134,12 +133,6 @@ class CheckpointSaver:
         filename = 'recover' + self.extension
         save_path = os.path.join(self.recovery_dir, filename)
         self._save(save_path, epoch)
-        # if os.path.exists(self.last_recovery_file):
-        #     try:
-        #         _logger.debug("Cleaning recovery: {}".format(self.last_recovery_file))
-        #         os.remove(self.last_recovery_file)
-        #     except Exception as e:
-        #         _logger.error("Exception '{}' while removing {}".format(e, self.last_recovery_file))
         self.last_recovery_file = self.curr_recovery_file
         self.curr_recovery_file = save_path
 
