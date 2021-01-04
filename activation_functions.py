@@ -9,13 +9,16 @@ import time
 
 
 class activation_factory():
-    def __init__(self, p=1, k=2, inplace=False):
-        self.p = p
-        self.k = k
+
+    actfun = None
+    p = None
+    k = None
+
+    def __init__(self, inplace=False):
+        pass
 
     def forward(self, input: Tensor) -> Tensor:
-        return activate(input, )
-
+        return activate(input, self.actfun, p=self.p, k=self.k)
 
 
 def permute(x, method, layer_type, k, offset, num_groups=2, shuffle_map=None):

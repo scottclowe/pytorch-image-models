@@ -348,14 +348,12 @@ class EfficientNet(nn.Module):
         self.conv_stem = create_conv2d(in_chans, stem_size, 3, stride=2, padding=pad_type)
         self.bn1 = norm_layer(stem_size, **norm_kwargs)
         self.act1 = act_layer(inplace=True)
-        print(self.act1)
 
         # Middle stages (IR/ER/DS Blocks)
         builder = EfficientNetBuilder(
             channel_multiplier, channel_divisor, channel_min, output_stride, pad_type, act_layer, se_kwargs,
             norm_layer, norm_kwargs, drop_path_rate, verbose=_DEBUG)
         self.blocks = nn.Sequential(*builder(stem_size, block_args))
-        # print("2341" + 1234)
         self.feature_info = builder.features
         head_chs = builder.in_chs
 
@@ -709,8 +707,13 @@ def _gen_efficientnet(variant, channel_multiplier=1.0, depth_multiplier=1.0, pre
     g = kwargs.pop('g')
     if actfun == 'swish':
         act_layer = resolve_act_layer(kwargs, 'swish')
+        actfun_multiplier = 1
     else:
         act_layer = activation_functions.activation_factory
+        act_layer.actfun = actfun
+        act_layer.p = p
+        act_layer.k = k
+        actfun_multiplier = p / k
     model_kwargs = dict(
         block_args=decode_arch_def(arch_def, depth_multiplier),
         num_features=round_channels(1280, channel_multiplier, 8, None),

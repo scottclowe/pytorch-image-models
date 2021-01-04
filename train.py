@@ -747,16 +747,15 @@ def train_epoch(
                         lr=lr,
                         data_time=data_time_m))
 
+                _logger.info("  ** Saving **")
+                saver.save_recovery(epoch, batch_idx=batch_idx)
+
                 if args.save_images and output_dir:
                     torchvision.utils.save_image(
                         input,
                         os.path.join(output_dir, 'train-batch-%d.jpg' % batch_idx),
                         padding=0,
                         normalize=True)
-
-        if last_batch or batch_idx % (args.log_interval * 5) == 0:
-            print("  ** Saving **")
-            saver.save_recovery(epoch, batch_idx=batch_idx)
 
         if lr_scheduler is not None:
             if args.tl:
