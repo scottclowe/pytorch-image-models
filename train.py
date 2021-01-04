@@ -260,6 +260,8 @@ parser.add_argument('--torchscript', dest='torchscript', action='store_true',
 # Bob's arguments
 parser.add_argument('--tl', action='store_true', default=False,
                     help='When true, only trains last two layers of network')
+parser.add_argument('--tl-layers', default='8full_9full', type=str, metavar='TL_LAYERS',
+                    help='Controls which layers are trainable')
 parser.add_argument('--actfun', default='swish', type=str, metavar='ACTFUN',
                     help='Controls which activation function is used in the network')
 
@@ -339,20 +341,20 @@ def main():
 
     if args.tl:
         model_layers = list(model.children())
-        intro_layers = model_layers[:3]
-        outro_layers = model_layers[4:]
-        main_layers = list(model_layers[3])
+        if args.tl_layers == '8full_9full':
+            intro_layers = model_layers[:3]
+            outro_layers = model_layers[4:]
+            main_layers = list(model_layers[3])
 
-        model1_layers = intro_layers + main_layers[:-1]
-        pre_model = torch.nn.Sequential(*model1_layers)
-        model2_layers = main_layers[-1:] + outro_layers
-        model = torch.nn.Sequential(*model2_layers)
+            model1_layers = intro_layers + main_layers[:-1]
+            pre_model = torch.nn.Sequential(*model1_layers)
+            model2_layers = main_layers[-1:] + outro_layers
+            model = torch.nn.Sequential(*model2_layers)
+        elif args.tl_layers == '9full':
+            pre_model = model_layers[:4]
+            model = model_layers[4:]
     else:
         pre_model = None
-
-    # optimizer = create_optimizer(args, model)
-    # lr_scheduler, num_epochs = create_scheduler(args, optimizer)
-    # print(num_epochs)
 
     if args.local_rank == 0:
         _logger.info('Model %s created, param count: %d' %
