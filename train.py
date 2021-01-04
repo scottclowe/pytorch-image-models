@@ -264,6 +264,12 @@ parser.add_argument('--tl-layers', default='8full_9full', type=str, metavar='TL_
                     help='Controls which layers are trainable')
 parser.add_argument('--actfun', default='swish', type=str, metavar='ACTFUN',
                     help='Controls which activation function is used in the network')
+parser.add_argument('--p', type=int, default=1, metavar='p',
+                    help='Number of pre-activation permutations')
+parser.add_argument('--k', type=int, default=2, metavar='k',
+                    help='Higher order activation group size')
+parser.add_argument('--g', type=int, default=1, metavar='g',
+                    help='Inter layer group size')
 
 
 def _parse_args():
@@ -327,6 +333,7 @@ def main():
     model = create_model(
         args.model,
         pretrained=args.pretrained,
+        actfun=args.actfun,
         num_classes=args.num_classes,
         drop_rate=args.drop,
         drop_connect_rate=args.drop_connect,  # DEPRECATED, use drop_path
@@ -337,12 +344,17 @@ def main():
         bn_momentum=args.bn_momentum,
         bn_eps=args.bn_eps,
         scriptable=args.torchscript,
-        checkpoint_path=args.initial_checkpoint)
+        checkpoint_path=args.initial_checkpoint,
+        p=args.p,
+        k=args.k,
+        g=args.g
+    )
 
     if args.tl:
         model_new = create_model(
             args.model,
             pretrained=False,
+            actfun=args.actfun,
             num_classes=args.num_classes,
             drop_rate=args.drop,
             drop_connect_rate=args.drop_connect,  # DEPRECATED, use drop_path
@@ -353,7 +365,11 @@ def main():
             bn_momentum=args.bn_momentum,
             bn_eps=args.bn_eps,
             scriptable=args.torchscript,
-            checkpoint_path=args.initial_checkpoint)
+            checkpoint_path=args.initial_checkpoint,
+            p=args.p,
+            k=args.k,
+            g=args.g
+        )
         model_layers = list(model.children())
         model_new_layers = list(model_new.children())
         if args.tl_layers == '8full_9full':
@@ -738,8 +754,8 @@ def train_epoch(
                         padding=0,
                         normalize=True)
 
-        if saver is not None and args.recovery_interval and (
-                last_batch or (batch_idx + 1) % args.recovery_interval == 0):
+        if last_batch or batch_idx % (args.log_interval * 5) == 0:
+            print("  ** Saving **")
             saver.save_recovery(epoch, batch_idx=batch_idx)
 
         if lr_scheduler is not None:

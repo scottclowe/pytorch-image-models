@@ -38,6 +38,8 @@ from .helpers import build_model_with_cfg, default_cfg_for_features
 from .layers import create_conv2d, create_classifier
 from .registry import register_model
 
+import activation_functions
+
 __all__ = ['EfficientNet']
 
 
@@ -346,6 +348,7 @@ class EfficientNet(nn.Module):
         self.conv_stem = create_conv2d(in_chans, stem_size, 3, stride=2, padding=pad_type)
         self.bn1 = norm_layer(stem_size, **norm_kwargs)
         self.act1 = act_layer(inplace=True)
+        print(self.act1)
 
         # Middle stages (IR/ER/DS Blocks)
         builder = EfficientNetBuilder(
@@ -700,12 +703,20 @@ def _gen_efficientnet(variant, channel_multiplier=1.0, depth_multiplier=1.0, pre
         ['ir_r4_k5_s2_e6_c192_se0.25'],
         ['ir_r1_k3_s1_e6_c320_se0.25'],
     ]
+    actfun = kwargs.pop('actfun')
+    p = kwargs.pop('p')
+    k = kwargs.pop('k')
+    g = kwargs.pop('g')
+    if actfun == 'swish':
+        act_layer = resolve_act_layer(kwargs, 'swish')
+    else:
+        act_layer = activation_functions.activation_factory
     model_kwargs = dict(
         block_args=decode_arch_def(arch_def, depth_multiplier),
         num_features=round_channels(1280, channel_multiplier, 8, None),
         stem_size=32,
         channel_multiplier=channel_multiplier,
-        act_layer=resolve_act_layer(kwargs, 'swish'),
+        act_layer=act_layer,
         norm_kwargs=resolve_bn_args(kwargs),
         **kwargs,
     )

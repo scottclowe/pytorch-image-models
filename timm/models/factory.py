@@ -6,12 +6,14 @@ from .layers import set_layer_config
 def create_model(
         model_name,
         pretrained=False,
+        actfun='swish',
         num_classes=1000,
         in_chans=3,
         checkpoint_path='',
         scriptable=None,
         exportable=None,
         no_jit=None,
+        p=1, k=2, g=1,
         **kwargs):
     """Create a model
 
@@ -30,7 +32,7 @@ def create_model(
         global_pool (str): global pool type (default: 'avg')
         **: other kwargs are model specific
     """
-    model_args = dict(pretrained=pretrained, num_classes=num_classes, in_chans=in_chans)
+    model_args = dict(pretrained=pretrained, num_classes=num_classes, in_chans=in_chans, actfun=actfun, p=p, k=k, g=g)
 
     # Only EfficientNet and MobileNetV3 models have support for batchnorm params or drop_connect_rate passed as args
     is_efficientnet = is_model_in_modules(model_name, ['efficientnet', 'mobilenetv3'])
@@ -50,7 +52,6 @@ def create_model(
     # should default to None in command line args/cfg. Remove them if they are present and not set so that
     # non-supporting models don't break and default args remain in effect.
     kwargs = {k: v for k, v in kwargs.items() if v is not None}
-
     with set_layer_config(scriptable=scriptable, exportable=exportable, no_jit=no_jit):
         if is_model(model_name):
             create_fn = model_entrypoint(model_name)
