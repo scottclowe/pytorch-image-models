@@ -345,14 +345,13 @@ def main():
             intro_layers = model_layers[:3]
             outro_layers = model_layers[4:]
             main_layers = list(model_layers[3])
-
             model1_layers = intro_layers + main_layers[:-1]
-            pre_model = torch.nn.Sequential(*model1_layers)
             model2_layers = main_layers[-1:] + outro_layers
-            model = torch.nn.Sequential(*model2_layers)
         elif args.tl_layers == '9full':
-            pre_model = model_layers[:4]
-            model = model_layers[4:]
+            model1_layers = model_layers[:4]
+            model2_layers = model_layers[4:]
+        pre_model = torch.nn.Sequential(*model1_layers)
+        model = torch.nn.Sequential(*model2_layers)
     else:
         pre_model = None
 
