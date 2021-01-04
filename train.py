@@ -746,8 +746,6 @@ def train_epoch(
                         rate_avg=input.size(0) * args.world_size / batch_time_m.avg,
                         lr=lr,
                         data_time=data_time_m))
-
-                _logger.info("  ** Saving **")
                 saver.save_recovery(epoch, batch_idx=batch_idx)
 
                 if args.save_images and output_dir:
