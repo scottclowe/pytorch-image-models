@@ -340,16 +340,32 @@ def main():
         checkpoint_path=args.initial_checkpoint)
 
     if args.tl:
+        model_new = create_model(
+            args.model,
+            pretrained=False,
+            num_classes=args.num_classes,
+            drop_rate=args.drop,
+            drop_connect_rate=args.drop_connect,  # DEPRECATED, use drop_path
+            drop_path_rate=args.drop_path,
+            drop_block_rate=args.drop_block,
+            global_pool=args.gp,
+            bn_tf=args.bn_tf,
+            bn_momentum=args.bn_momentum,
+            bn_eps=args.bn_eps,
+            scriptable=args.torchscript,
+            checkpoint_path=args.initial_checkpoint)
         model_layers = list(model.children())
+        model_new_layers = list(model_new.children())
         if args.tl_layers == '8full_9full':
             intro_layers = model_layers[:3]
-            outro_layers = model_layers[4:]
+            outro_layers = model_new_layers[4:]
             main_layers = list(model_layers[3])
+            main_layers_new = list(model_new_layers[3])
             model1_layers = intro_layers + main_layers[:-1]
-            model2_layers = main_layers[-1:] + outro_layers
+            model2_layers = main_layers_new[-1:] + outro_layers
         elif args.tl_layers == '9full':
             model1_layers = model_layers[:4]
-            model2_layers = model_layers[4:]
+            model2_layers = model_new_layers[4:]
         pre_model = torch.nn.Sequential(*model1_layers)
         model = torch.nn.Sequential(*model2_layers)
     else:
