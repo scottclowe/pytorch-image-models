@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 from torch import logsumexp
 from torch import Tensor
+import torch.nn as nn
 
 import math
 import numbers
@@ -17,7 +18,7 @@ class activation_factory():
     def __init__(self, inplace=False):
         pass
 
-    def forward(self, input: Tensor) -> Tensor:
+    def __call__(self, input: Tensor) -> Tensor:
         return activate(input, self.actfun, p=self.p, k=self.k)
 
 
