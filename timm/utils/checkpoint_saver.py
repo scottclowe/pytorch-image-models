@@ -27,7 +27,7 @@ class CheckpointSaver:
             model_ema=None,
             amp_scaler=None,
             checkpoint_prefix='checkpoint',
-            recovery_prefix='recovery',
+            recovery_prefix='recover',
             checkpoint_dir='',
             recovery_dir='',
             decreasing=False,
@@ -131,7 +131,7 @@ class CheckpointSaver:
 
     def save_recovery(self, epoch, batch_idx=0):
         assert epoch >= 0
-        filename = '-'.join([self.recovery_prefix, str(epoch), str(batch_idx)]) + self.extension
+        filename = 'recover' + self.extension
         save_path = os.path.join(self.recovery_dir, filename)
         self._save(save_path, epoch)
         if os.path.exists(self.last_recovery_file):

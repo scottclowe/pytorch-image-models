@@ -418,9 +418,10 @@ def main():
 
     # optionally resume from a checkpoint
     resume_epoch = None
-    if args.resume and os.path.isfile(args.resume):
+    resume = os.path.join(args.resume, 'recover') + '.pth.tar'
+    if args.resume and os.path.isfile(resume):
         resume_epoch = resume_checkpoint(
-            model, args.resume,
+            model, resume,
             optimizer=None if args.no_resume_opt else optimizer,
             loss_scaler=None if args.no_resume_opt else loss_scaler,
             log_info=args.local_rank == 0)
@@ -431,7 +432,7 @@ def main():
         # Important to create EMA model after cuda(), DP wrapper, and AMP but before SyncBN and DDP wrapper
         model_ema = ModelEmaV2(
             model, decay=args.model_ema_decay, device='cpu' if args.model_ema_force_cpu else None)
-        if args.resume and os.path.isfile(args.resume):
+        if args.resume and os.path.isfile(resume):
             load_checkpoint(model_ema.module, args.resume, use_ema=True)
 
     # setup distributed training
