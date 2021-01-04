@@ -312,6 +312,14 @@ def main():
         _logger.info('Training with a single process on 1 GPUs.')
     assert args.rank >= 0
 
+    _logger.info(
+        '====================\n\n'
+        'Actfun: {}\n'
+        'LR: {}\n'
+        'Epochs: {}\n'
+        'Layers: {}\n'
+        '\n===================='.format(args.actfun, args.lr, args.epochs, args.tl_layers))
+
     # resolve AMP arguments based on PyTorch / Apex availability
     use_amp = None
     if args.amp:
@@ -333,7 +341,7 @@ def main():
     model = create_model(
         args.model,
         pretrained=args.pretrained,
-        actfun=args.actfun,
+        actfun='swish',
         num_classes=args.num_classes,
         drop_rate=args.drop,
         drop_connect_rate=args.drop_connect,  # DEPRECATED, use drop_path

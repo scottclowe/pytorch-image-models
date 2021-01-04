@@ -54,6 +54,24 @@ def permute(x, method, layer_type, k, offset, num_groups=2, shuffle_map=None):
         return x
 
 
+def get_pk_ratio(actfun, p, k, g):
+    if actfun == 'groupsort':
+        pk_ratio = p
+    elif actfun == 'bin_part_full' or actfun == 'ail_part_full':
+        pk_ratio = (p * (2 + k)) / (3 * k)
+    elif actfun == 'bin_all_full' or actfun == 'ail_all_full':
+        pk_ratio = p * ((3 / k) + 1)
+    elif actfun == 'bin_all_max_min_sgm' or actfun == 'ail_all_or_and_xnor':
+        pk_ratio = p * ((3 / k))
+    elif actfun == 'bin_all_max_min' or actfun == 'ail_all_or_and':
+        pk_ratio = p * ((2 / k))
+    elif actfun == 'bin_all_max_sgm' or actfun == 'ail_all_or_xnor':
+        pk_ratio = p * ((2 / k))
+    else:
+        pk_ratio = (p / k)
+    return pk_ratio
+
+
 def activate(x, actfun, p=1, k=2, M=None,
              layer_type='conv',
              permute_type='shuffle',

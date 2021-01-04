@@ -211,7 +211,7 @@ class InvertedResidual(nn.Module):
                  stride=1, dilation=1, pad_type='', act_layer=nn.ReLU, noskip=False,
                  exp_ratio=1.0, exp_kernel_size=1, pw_kernel_size=1,
                  se_ratio=0., se_kwargs=None, norm_layer=nn.BatchNorm2d, norm_kwargs=None,
-                 conv_kwargs=None, drop_path_rate=0., high_ord=False):
+                 conv_kwargs=None, drop_path_rate=0.):
         super(InvertedResidual, self).__init__()
         norm_kwargs = norm_kwargs or {}
         conv_kwargs = conv_kwargs or {}

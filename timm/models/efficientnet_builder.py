@@ -222,8 +222,9 @@ class EfficientNetBuilder:
     def __init__(self, channel_multiplier=1.0, channel_divisor=8, channel_min=None,
                  output_stride=32, pad_type='', act_layer=None, se_kwargs=None,
                  norm_layer=nn.BatchNorm2d, norm_kwargs=None, drop_path_rate=0., feature_location='',
-                 verbose=False):
+                 verbose=False, actfun_multiplier=1):
         self.channel_multiplier = channel_multiplier
+        # self.actfun_multiplier = actfun_multiplier
         self.channel_divisor = channel_divisor
         self.channel_min = channel_min
         self.output_stride = output_stride
@@ -250,7 +251,6 @@ class EfficientNetBuilder:
 
     def _make_block(self, ba, block_idx, block_count):
         drop_path_rate = self.drop_path_rate * block_idx / block_count
-        high_ord = False
         # if ba['out_chs'] == 320:
         #     high_ord = True
         #     print("=========================")
@@ -274,7 +274,7 @@ class EfficientNetBuilder:
             if ba.get('num_experts', 0) > 0:
                 block = CondConvResidual(**ba)
             else:
-                block = InvertedResidual(**ba, high_ord=high_ord)
+                block = InvertedResidual(**ba)
         elif bt == 'ds' or bt == 'dsa':
             ba['drop_path_rate'] = drop_path_rate
             ba['se_kwargs'] = self.se_kwargs
@@ -292,8 +292,6 @@ class EfficientNetBuilder:
             assert False, 'Uknkown block type (%s) while building model.' % bt
         self.in_chs = ba['out_chs']  # update in_chs for arg of next block
 
-        # if high_ord:
-        #     print(block)
         return block
 
     def __call__(self, in_chs, model_block_args):
