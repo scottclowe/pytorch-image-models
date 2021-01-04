@@ -10,7 +10,10 @@ from collections import OrderedDict
 def get_outdir(path, *paths, inc=False):
     outdir = os.path.join(path, *paths)
     if not os.path.exists(outdir):
-        os.makedirs(outdir)
+        try:
+            os.makedirs(outdir)
+        except OSError as err:
+            print(err)
     elif inc:
         count = 1
         outdir_inc = outdir + '-' + str(count)
