@@ -267,6 +267,8 @@ parser.add_argument('--k', type=int, default=2, metavar='k',
                     help='Higher order activation group size')
 parser.add_argument('--g', type=int, default=1, metavar='g',
                     help='Inter layer group size')
+parser.add_argument('--check-path', default='', type=str, metavar='PATH',
+                    help='Path for recording checkpoints')
 
 
 def _parse_args():
@@ -464,14 +466,30 @@ def main():
             loss_scaler=None if args.no_resume_opt else loss_scaler,
             log_info=args.local_rank == 0)
 
+    cp_loaded = None
+    resume_epoch = None
+    check_path = os.path.join(args.check_path, 'recover') + '.pth'
+    if os.path.isfile(check_path):
+        cp_loaded = torch.load(check_path)
+        model.load_state_dict(cp_loaded['model'])
+        optimizer.load_state_dict(cp_loaded['optimizer'])
+        resume_epoch = cp_loaded['epoch']
+        loss_scaler.load_state_dict(cp_loaded['amp'])
+        model.cuda()
+        if args.channels_last:
+            model = model.to(memory_format=torch.channels_last)
+        _logger.info('============ LOADED CHECKPOINT: Epoch {}'.format(resume_epoch))
+
     # setup exponential moving average of model weights, SWA could be used here too
     model_ema = None
     if args.model_ema:
         # Important to create EMA model after cuda(), DP wrapper, and AMP but before SyncBN and DDP wrapper
         model_ema = ModelEmaV2(
             model, decay=args.model_ema_decay, device='cpu' if args.model_ema_force_cpu else None)
-        if args.resume and os.path.exists(resume_path):
-            load_checkpoint(model_ema.module, args.resume, use_ema=True)
+        # if args.resume and os.path.exists(resume_path):
+        #     load_checkpoint(model_ema.module, args.resume, use_ema=True)
+        if cp_loaded is not None:
+            model_ema.load_state_dict(cp_loaded['model_ema'])
 
     # setup distributed training
     if args.distributed:
@@ -496,6 +514,8 @@ def main():
         start_epoch = resume_epoch
     if lr_scheduler is not None and start_epoch > 0:
         lr_scheduler.step(start_epoch)
+    if cp_loaded is not None:
+        lr_scheduler.load_state_dict(cp_loaded['scheduler'])
 
     if args.local_rank == 0:
         _logger.info('Scheduled epochs: {}'.format(num_epochs))
@@ -617,6 +637,17 @@ def main():
 
     try:
         for epoch in range(start_epoch, num_epochs):
+
+            if os.path.exists(args.check_path):
+                torch.save({'model': model.state_dict(),
+                            'model_ema': model_ema.state_dict(),
+                            'optimizer': optimizer.state_dict(),
+                            'scheduler': lr_scheduler.state_dict(),
+                            'epoch': epoch,
+                            'amp': loss_scaler.state_dict()
+                            }, check_path)
+                _logger.info('============ SAVED CHECKPOINT: Epoch {}'.format(epoch))
+
             if args.distributed:
                 loader_train.sampler.set_epoch(epoch)
 
