@@ -154,6 +154,7 @@ def activate(x, actfun, p=1, k=2, M=None,
         x = groupsort(x, layer_type)
     else:
         x = x.squeeze()
+        print(x.shape)
         x = _ACTFUNS[actfun](x)
 
     return x
