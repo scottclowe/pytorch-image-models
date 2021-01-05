@@ -168,7 +168,7 @@ class DepthwiseSeparableConv(nn.Module):
         activations = in_chs
         if isinstance(self.act1, activation_functions.HigherOrderActivation):
             self.act1.init_shuffle_maps(in_chs)
-            activations = self.act1.get_actfun_multiplier() * in_chs
+            activations = int(self.act1.get_actfun_multiplier() * in_chs)
 
         # Squeeze-and-excitation
         if has_se:
@@ -183,7 +183,7 @@ class DepthwiseSeparableConv(nn.Module):
         activations = out_chs
         if isinstance(self.act2, activation_functions.HigherOrderActivation):
             self.act2.init_shuffle_maps(out_chs)
-            activations = self.act2.get_actfun_multiplier() * out_chs
+            activations = int(self.act2.get_actfun_multiplier() * out_chs)
 
     def feature_info(self, location):
         if location == 'expansion':  # after SE, input to PW
@@ -237,7 +237,7 @@ class InvertedResidual(nn.Module):
         activations = mid_chs
         if isinstance(self.act1, activation_functions.HigherOrderActivation):
             self.act1.init_shuffle_maps(mid_chs)
-            activations = self.act1.get_actfun_multiplier() * mid_chs
+            activations = int(self.act1.get_actfun_multiplier() * mid_chs)
 
         # Depth-wise convolution
         self.conv_dw = create_conv2d(
@@ -248,7 +248,7 @@ class InvertedResidual(nn.Module):
         activations = mid_chs
         if isinstance(self.act2, activation_functions.HigherOrderActivation):
             self.act2.init_shuffle_maps(mid_chs)
-            activations = self.act1.get_actfun_multiplier() * mid_chs
+            activations = int(self.act2.get_actfun_multiplier() * mid_chs)
 
         # Squeeze-and-excitation
         if has_se:
