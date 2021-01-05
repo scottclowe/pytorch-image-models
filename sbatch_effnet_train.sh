@@ -15,7 +15,6 @@ source ~/.bashrc
 source activate ~/venvs/efficientnet_train
 
 SAVE_PATH="$1"
-ACTFUN="$2"
 SEED="$SLURM_ARRAY_TASK_ID"
 
 touch /checkpoint/robearle/${SLURM_JOB_ID}
