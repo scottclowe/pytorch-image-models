@@ -332,7 +332,7 @@ class EfficientNet(nn.Module):
     def __init__(self, block_args, num_classes=1000, num_features=1280, in_chans=3, stem_size=32,
                  channel_multiplier=1.0, channel_divisor=8, channel_min=None,
                  output_stride=32, pad_type='', fix_stem=False, act_layer=nn.ReLU, drop_rate=0., drop_path_rate=0.,
-                 se_kwargs=None, norm_layer=nn.BatchNorm2d, norm_kwargs=None, global_pool='avg', actfun_multiplier=1):
+                 se_kwargs=None, norm_layer=nn.BatchNorm2d, norm_kwargs=None, global_pool='avg'):
         super(EfficientNet, self).__init__()
         norm_kwargs = norm_kwargs or {}
 
@@ -346,12 +346,16 @@ class EfficientNet(nn.Module):
         self.conv_stem = create_conv2d(in_chans, stem_size, 3, stride=2, padding=pad_type)
         self.bn1 = norm_layer(stem_size, **norm_kwargs)
         self.act1 = act_layer(inplace=True)
+        activations = stem_size
+        if isinstance(self.act1, activation_functions.HigherOrderActivation):
+            self.act1.init_shuffle_maps(stem_size)
+            activations = int(self.act1.get_actfun_multiplier() * stem_size)
 
         # Middle stages (IR/ER/DS Blocks)
         builder = EfficientNetBuilder(
             channel_multiplier, channel_divisor, channel_min, output_stride, pad_type, act_layer, se_kwargs,
             norm_layer, norm_kwargs, drop_path_rate, verbose=_DEBUG)
-        self.blocks = nn.Sequential(*builder(int(stem_size * actfun_multiplier), block_args))
+        self.blocks = nn.Sequential(*builder(activations, block_args))
         self.feature_info = builder.features
         head_chs = builder.in_chs
 
@@ -359,8 +363,11 @@ class EfficientNet(nn.Module):
         self.conv_head = create_conv2d(head_chs, self.num_features, 1, padding=pad_type)
         self.bn2 = norm_layer(self.num_features, **norm_kwargs)
         self.act2 = act_layer(inplace=True)
-        self.global_pool, self.classifier = create_classifier(
-            int(self.num_features * actfun_multiplier), self.num_classes, pool_type=global_pool)
+        activations = num_features
+        if isinstance(self.act2, activation_functions.HigherOrderActivation):
+            self.act2.init_shuffle_maps(num_features)
+            activations = int(self.act2.get_actfun_multiplier() * num_features)
+        self.global_pool, self.classifier = create_classifier(activations, self.num_classes, pool_type=global_pool)
 
         efficientnet_init_weights(self)
         print()
