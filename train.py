@@ -22,6 +22,7 @@ import logging
 from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime
+import csv
 
 import torch
 import torch.nn as nn
@@ -637,6 +638,14 @@ def main():
         with open(os.path.join(output_dir, 'args.yaml'), 'w') as f:
             f.write(args_text)
 
+    fieldnames = ['seed', 'actfun', 'epoch', 'batch_idx',
+                  'loss', 'loss_avg', 'acc1', 'acc1_avg', 'acc5', 'acc5_avg', 'ema']
+    outfile_path = os.path.join(args.save_path, 'output') + '.csv'
+    if not os.path.exists(outfile_path):
+        with open(outfile_path, mode='w') as out_file:
+            writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
+            writer.writeheader()
+
     try:
         for epoch in range(start_epoch, num_epochs):
 
@@ -665,14 +674,15 @@ def main():
                 distribute_bn(model, args.world_size, args.dist_bn == 'reduce')
 
             eval_metrics = validate(model, loader_eval, validate_loss_fn, args, amp_autocast=amp_autocast,
-                                    pre_model=pre_model)
+                                    pre_model=pre_model, outfile_path=outfile_path, fieldnames=fieldnames, epoch=epoch,
+                                    ema=False)
 
             if model_ema is not None and not args.model_ema_force_cpu:
                 if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
                     distribute_bn(model_ema, args.world_size, args.dist_bn == 'reduce')
                 ema_eval_metrics = validate(
                     model_ema.module, loader_eval, validate_loss_fn, args, amp_autocast=amp_autocast, log_suffix=' (EMA)',
-                    pre_model=pre_model)
+                    pre_model=pre_model, outfile_path=outfile_path, fieldnames=fieldnames, epoch=epoch, ema=True)
                 eval_metrics = ema_eval_metrics
 
             if lr_scheduler is not None:
@@ -801,7 +811,8 @@ def train_epoch(
     return OrderedDict([('loss', losses_m.avg)])
 
 
-def validate(model, loader, loss_fn, args, amp_autocast=suppress, log_suffix='', pre_model=None):
+def validate(model, loader, loss_fn, args, amp_autocast=suppress, log_suffix='', pre_model=None,
+             outfile_path=None, fieldnames=None, epoch=None, ema=False):
     batch_time_m = AverageMeter()
     losses_m = AverageMeter()
     top1_m = AverageMeter()
@@ -862,6 +873,21 @@ def validate(model, loader, loss_fn, args, amp_autocast=suppress, log_suffix='',
                     'Acc@5: {top5.val:>7.4f} ({top5.avg:>7.4f})'.format(
                         log_name, batch_idx, last_idx, batch_time=batch_time_m,
                         loss=losses_m, top1=top1_m, top5=top5_m))
+
+                with open(outfile_path, mode='a') as out_file:
+                    writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
+                    writer.writerow({'seed': args.seed,
+                                     'actfun': args.actfun,
+                                     'epoch': epoch,
+                                     'batch_idx': batch_idx,
+                                     'loss': losses_m.val,
+                                     'loss_avg': losses_m.avg,
+                                     'acc1': top1_m.val,
+                                     'acc1_avg': top1_m.avg,
+                                     'acc5': top5_m.val,
+                                     'acc5_avg': top5_m.avg,
+                                     'ema': ema
+                                     })
 
     metrics = OrderedDict([('loss', losses_m.avg), ('top1', top1_m.avg), ('top5', top5_m.avg)])
 

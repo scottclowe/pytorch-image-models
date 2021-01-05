@@ -3,13 +3,13 @@
 #SBATCH --exclude=gpu102
 #SBATCH --exclude=gpu115
 #SBATCH --gres=gpu:4                        # request GPU(s)
-#SBATCH --qos=normal
+#SBATCH --qos=high
 #SBATCH -c 24                                # number of CPU cores
 #SBATCH --mem=128G                           # memory per node
 #SBATCH --time=64:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0%1                    # array value
-#SBATCH --output=logs_new/ef_tl_9full2/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=ef_tl_9full2
+#SBATCH --output=logs_new/ef_tl_8full_9full2/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=ef_tl_8full_9full2
 
 source ~/.bashrc
 source activate ~/venvs/efficientnet_train
@@ -19,7 +19,6 @@ SEED="$SLURM_ARRAY_TASK_ID"
 
 touch /checkpoint/robearle/${SLURM_JOB_ID}
 CHECK_PATH=/checkpoint/robearle/${SLURM_JOB_ID}
-INIT_CHECK=~/pytorch-image-models/outputs/ef_tl_9full/train/20210105-010718-efficientnet_b0-224/checkpoint-11.pth.tar
 
 # Debugging outputs
 pwd
@@ -39,5 +38,5 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-./distributed_train.sh 4 /scratch/ssd001/datasets/imagenet/ --initial-checkpoint $INIT_CHECK --model efficientnet_b0 -b 384 --seed $SEED --output $SAVE_PATH --check-path $CHECK_PATH --pretrained --tl --tl-layers 8full_9full --sched step --epochs 450 --decay-epochs 2.4 --decay-rate .97 --opt rmsproptf --opt-eps .001 -j 8 --warmup-lr 1e-6 --weight-decay 1e-5 --drop 0.2 --drop-connect 0.2 --model-ema --model-ema-decay 0.9999 --aa original --remode pixel --reprob 0.2 --amp --lr .048
+./distributed_train.sh 4 /scratch/ssd001/datasets/imagenet/ --model efficientnet_b0 -b 384 --seed $SEED --output $SAVE_PATH --check-path $CHECK_PATH --pretrained --tl --tl-layers 8full_9full --sched step --epochs 450 --decay-epochs 2.4 --decay-rate .97 --opt rmsproptf --opt-eps .001 -j 8 --warmup-lr 1e-6 --weight-decay 1e-5 --drop 0.2 --drop-connect 0.2 --model-ema --model-ema-decay 0.9999 --aa original --remode pixel --reprob 0.2 --amp --lr .048
 
