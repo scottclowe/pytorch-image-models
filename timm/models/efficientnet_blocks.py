@@ -231,7 +231,9 @@ class InvertedResidual(nn.Module):
             mid_chs, mid_chs, dw_kernel_size, stride=stride, dilation=dilation,
             padding=pad_type, depthwise=True, **conv_kwargs)
         self.bn2 = norm_layer(mid_chs, **norm_kwargs)
-        print(type(act_layer))
+        print(type(act_layer()))
+        print(type(act_layer.__name__))
+        print(type(act_layer().__name__))
         print("24"+2345)
         self.act2 = act_layer(inplace=True)
 
