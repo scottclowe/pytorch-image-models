@@ -20,10 +20,10 @@ class activation_factory():
         pass
 
     def __call__(self, input: Tensor) -> Tensor:
-        # print(input.shape)
+        print(input.shape)
         output = activate(input, self.actfun, p=self.p, k=self.k)
-        # print(output.shape)
-        # print()
+        print(output.shape)
+        print()
         return output
 
     def get_actfun_multiplier(self):
