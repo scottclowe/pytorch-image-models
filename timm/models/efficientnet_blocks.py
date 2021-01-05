@@ -235,6 +235,8 @@ class InvertedResidual(nn.Module):
         print(type(act_layer()))
         self.act2 = act_layer(inplace=True)
         print(isinstance(self.act2, activation_functions.activation_factory))
+        if isinstance(self.act2, activation_functions.activation_factory):
+            print(self.act2.actfun)
 
         # Squeeze-and-excitation
         if has_se:
