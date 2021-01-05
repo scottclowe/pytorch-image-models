@@ -8,8 +8,8 @@
 #SBATCH --mem=128G                           # memory per node
 #SBATCH --time=64:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0%1                    # array value
-#SBATCH --output=logs_new/ef_tl_9full2/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=ef_tl_9full2
+#SBATCH --output=logs_new/ef_tl_8full_9full2/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=ef_tl_8full_9full2
 
 source ~/.bashrc
 source activate ~/venvs/efficientnet_train
@@ -19,7 +19,7 @@ SEED="$SLURM_ARRAY_TASK_ID"
 
 touch /checkpoint/robearle/${SLURM_JOB_ID}
 CHECK_PATH=/checkpoint/robearle/${SLURM_JOB_ID}
-INIT_CHECK=~/pytorch-image-models/outputs/ef_tl_9full/train/20210105-010718-efficientnet_b0-224/checkpoint-11.pth.tar
+INIT_CHECK=~/pytorch-image-models/outputs/ef_tl_8full_9full/train/20210105-011438-efficientnet_b0-224/checkpoint-11.pth.tar
 
 # Debugging outputs
 pwd
