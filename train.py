@@ -640,7 +640,7 @@ def main():
 
     fieldnames = ['seed', 'actfun', 'epoch', 'batch_idx',
                   'loss', 'loss_avg', 'acc1', 'acc1_avg', 'acc5', 'acc5_avg', 'ema']
-    outfile_path = os.path.join(args.save_path, 'output') + '.csv'
+    outfile_path = os.path.join(args.output, 'output') + '.csv'
     if not os.path.exists(outfile_path):
         with open(outfile_path, mode='w') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
