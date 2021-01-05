@@ -14,12 +14,19 @@ class activation_factory():
     actfun = None
     p = None
     k = None
+    g = None
 
     def __init__(self, inplace=False):
         pass
 
     def __call__(self, input: Tensor) -> Tensor:
         return activate(input, self.actfun, p=self.p, k=self.k)
+
+    def get_actfun_multiplier(self):
+        if self.actfun is not None and self.p is not None and self.k is not None:
+            return get_pk_ratio(self.actfun, self.p, self.k, self.g)
+        else:
+            return 1
 
 
 def permute(x, method, layer_type, k, offset, num_groups=2, shuffle_map=None):

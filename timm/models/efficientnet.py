@@ -711,7 +711,7 @@ def _gen_efficientnet(variant, channel_multiplier=1.0, depth_multiplier=1.0, pre
         act_layer.actfun = actfun
         act_layer.p = p
         act_layer.k = k
-        actfun_multiplier = activation_functions.get_pk_ratio(actfun, p, k, g)
+        act_layer.g = g
     model_kwargs = dict(
         block_args=decode_arch_def(arch_def, depth_multiplier),
         num_features=round_channels(1280, channel_multiplier, 8, None),
@@ -719,7 +719,6 @@ def _gen_efficientnet(variant, channel_multiplier=1.0, depth_multiplier=1.0, pre
         channel_multiplier=channel_multiplier,
         act_layer=act_layer,
         norm_kwargs=resolve_bn_args(kwargs),
-        actfun_multiplier=actfun_multiplier,
         **kwargs,
     )
     model = _create_effnet(model_kwargs, variant, pretrained)

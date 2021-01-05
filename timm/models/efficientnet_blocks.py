@@ -218,6 +218,7 @@ class InvertedResidual(nn.Module):
         conv_kwargs = conv_kwargs or {}
         mid_chs = make_divisible(in_chs * exp_ratio)
         has_se = se_ratio is not None and se_ratio > 0.
+        actfun_multiplier = 1
         self.has_residual = (in_chs == out_chs and stride == 1) and not noskip
         self.drop_path_rate = drop_path_rate
 
@@ -226,6 +227,8 @@ class InvertedResidual(nn.Module):
         self.bn1 = norm_layer(mid_chs, **norm_kwargs)
         # print(self.conv_pw)
         self.act1 = act_layer(inplace=True)
+        if isinstance(self.act1, activation_functions.activation_factory):
+            actfun_multiplier = self.act1.get_actfun_multiplier()
 
         # Depth-wise convolution
         self.conv_dw = create_conv2d(
@@ -234,9 +237,10 @@ class InvertedResidual(nn.Module):
         self.bn2 = norm_layer(mid_chs, **norm_kwargs)
         print(type(act_layer()))
         self.act2 = act_layer(inplace=True)
-        print(isinstance(self.act2, activation_functions.activation_factory))
-        if isinstance(self.act2, activation_functions.activation_factory):
-            print(self.act2.actfun)
+        # print(isinstance(self.act2, activation_functions.activation_factory))
+        # if isinstance(self.act2, activation_functions.activation_factory):
+        #     print(self.act2.actfun)
+        print(actfun_multiplier)
 
         # Squeeze-and-excitation
         if has_se:
