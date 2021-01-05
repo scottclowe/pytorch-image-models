@@ -9,22 +9,24 @@ import numbers
 import time
 
 
-class activation_factory():
+class HigherOrderActivation:
 
     actfun = None
     p = None
     k = None
     g = None
+    shuffle_maps = None
 
     def __init__(self, inplace=False):
         pass
 
     def __call__(self, input: Tensor) -> Tensor:
-        print(input.shape)
-        output = activate(input, self.actfun, p=self.p, k=self.k)
-        print(output.shape)
-        print()
-        return output
+        if self.shuffle_maps is None:
+            print("Generating Shuffle Maps!")
+            self.shuffle_maps = []
+            for i in range(self.p):
+                self.shuffle_maps.append(torch.randperm(input.shape[1]))
+        return activate(input, self.actfun, p=self.p, k=self.k, shuffle_maps=self.shuffle_maps)
 
     def get_actfun_multiplier(self):
         if self.actfun is not None and self.p is not None and self.k is not None:

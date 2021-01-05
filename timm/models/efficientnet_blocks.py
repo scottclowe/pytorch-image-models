@@ -227,15 +227,15 @@ class InvertedResidual(nn.Module):
         self.bn1 = norm_layer(mid_chs, **norm_kwargs)
         # print(self.conv_pw)
         self.act1 = act_layer(inplace=True)
-        if isinstance(self.act1, activation_functions.activation_factory):
-            actfun_multiplier = self.act1.get_actfun_multiplier()
+        # if isinstance(self.act1, activation_functions.HigherOrderActivation):
+        #     actfun_multiplier = self.act1.get_actfun_multiplier()
 
         # Depth-wise convolution
         self.conv_dw = create_conv2d(
             mid_chs, mid_chs, dw_kernel_size, stride=stride, dilation=dilation,
             padding=pad_type, depthwise=True, **conv_kwargs)
         self.bn2 = norm_layer(mid_chs, **norm_kwargs)
-        print(type(act_layer()))
+        # print(type(act_layer()))
         self.act2 = act_layer(inplace=True)
         # print(isinstance(self.act2, activation_functions.activation_factory))
         # if isinstance(self.act2, activation_functions.activation_factory):
