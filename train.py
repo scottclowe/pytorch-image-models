@@ -22,13 +22,11 @@ import logging
 from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime
-import math
 
 import torch
 import torch.nn as nn
 import torchvision.utils
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
-from torch.optim.lr_scheduler import OneCycleLR
 
 from timm.data import Dataset, create_loader, resolve_data_config, Mixup, FastCollateMixup, AugMixDataset
 from timm.models import create_model, resume_checkpoint, load_checkpoint, convert_splitbn_model
@@ -37,7 +35,6 @@ from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy, JsdCro
 from timm.optim import create_optimizer
 from timm.scheduler import create_scheduler
 from timm.utils import ApexScaler, NativeScaler
-from pprint import pprint
 
 try:
     from apex import amp
@@ -131,7 +128,7 @@ parser.add_argument('--warmup-lr', type=float, default=0.0001, metavar='LR',
                     help='warmup learning rate (default: 0.0001)')
 parser.add_argument('--min-lr', type=float, default=1e-5, metavar='LR',
                     help='lower lr bound for cyclic schedulers that hit 0 (1e-5)')
-parser.add_argument('--epochs', type=int, default=2, metavar='N',
+parser.add_argument('--epochs', type=int, default=200, metavar='N',
                     help='number of epochs to train (default: 2)')
 parser.add_argument('--start-epoch', default=None, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
@@ -227,7 +224,7 @@ parser.add_argument('--seed', type=int, default=42, metavar='S',
                     help='random seed (default: 42)')
 parser.add_argument('--log-interval', type=int, default=50, metavar='N',
                     help='how many batches to wait before logging training status')
-parser.add_argument('--recovery-interval', type=int, default=50, metavar='N',
+parser.add_argument('--recovery-interval', type=int, default=0, metavar='N',
                     help='how many batches to wait before writing recovery checkpoint')
 parser.add_argument('-j', '--workers', type=int, default=4, metavar='N',
                     help='how many training processes to use (default: 1)')
@@ -459,10 +456,10 @@ def main():
 
     # optionally resume from a checkpoint
     resume_epoch = None
-    resume = os.path.join(args.resume, 'recover') + '.pth.tar'
-    if args.resume and os.path.isfile(resume):
+    resume_path = os.path.join(args.resume, 'recover.pth.tar')
+    if args.resume:
         resume_epoch = resume_checkpoint(
-            model, resume,
+            model, resume_path,
             optimizer=None if args.no_resume_opt else optimizer,
             loss_scaler=None if args.no_resume_opt else loss_scaler,
             log_info=args.local_rank == 0)
@@ -473,7 +470,7 @@ def main():
         # Important to create EMA model after cuda(), DP wrapper, and AMP but before SyncBN and DDP wrapper
         model_ema = ModelEmaV2(
             model, decay=args.model_ema_decay, device='cpu' if args.model_ema_force_cpu else None)
-        if args.resume and os.path.isfile(resume):
+        if args.resume:
             load_checkpoint(model_ema.module, args.resume, use_ema=True)
 
     # setup distributed training
@@ -488,6 +485,20 @@ def main():
                 _logger.info("Using native Torch DistributedDataParallel.")
             model = NativeDDP(model, device_ids=[args.local_rank])  # can use device str in Torch >= 1.1
         # NOTE: EMA model does not need to be wrapped by DDP
+
+    # setup learning rate schedule and starting epoch
+    lr_scheduler, num_epochs = create_scheduler(args, optimizer)
+    start_epoch = 0
+    if args.start_epoch is not None:
+        # a specified start_epoch will always override the resume epoch
+        start_epoch = args.start_epoch
+    elif resume_epoch is not None:
+        start_epoch = resume_epoch
+    if lr_scheduler is not None and start_epoch > 0:
+        lr_scheduler.step(start_epoch)
+
+    if args.local_rank == 0:
+        _logger.info('Scheduled epochs: {}'.format(num_epochs))
 
     # create the train and eval datasets
     train_dir = os.path.join(args.data, 'train')
@@ -569,28 +580,6 @@ def main():
         crop_pct=data_config['crop_pct'],
         pin_memory=args.pin_mem,
     )
-    # setup learning rate schedule and starting epoch
-    if args.tl:
-        lr_scheduler = OneCycleLR(optimizer,
-                                  max_lr=args.lr,
-                                  epochs=args.epochs,
-                                  steps_per_epoch=int(math.floor(len(loader_train.dataset) / args.batch_size)),
-                                  cycle_momentum=False
-                                  )
-        num_epochs = args.epochs
-    else:
-        lr_scheduler, num_epochs = create_scheduler(args, optimizer)
-    start_epoch = 0
-    if args.start_epoch is not None:
-        # a specified start_epoch will always override the resume epoch
-        start_epoch = args.start_epoch
-    elif resume_epoch is not None:
-        start_epoch = resume_epoch
-    if lr_scheduler is not None and start_epoch > 0:
-        lr_scheduler.step(start_epoch)
-
-    if args.local_rank == 0:
-        _logger.info('Scheduled epochs: {}'.format(num_epochs))
 
     # setup loss function
     if args.jsd:
@@ -653,9 +642,8 @@ def main():
                 eval_metrics = ema_eval_metrics
 
             if lr_scheduler is not None:
-                if not args.tl:
-                    # step LR for next epoch
-                    lr_scheduler.step(epoch + 1, eval_metrics[eval_metric])
+                # step LR for next epoch
+                lr_scheduler.step(epoch + 1, eval_metrics[eval_metric])
 
             update_summary(
                 args.seed, epoch, args.lr, args.epochs, args.batch_size, args.actfun,
@@ -663,8 +651,6 @@ def main():
                 write_header=best_metric is None)
 
             if saver is not None:
-                _logger.info("Saving")
-                saver.save_recovery(epoch)
                 # save proper checkpoint with eval metric
                 save_metric = eval_metrics[eval_metric]
                 best_metric, best_epoch = saver.save_checkpoint(epoch, metric=save_metric)
@@ -765,11 +751,12 @@ def train_epoch(
                         padding=0,
                         normalize=True)
 
+        if saver is not None and args.recovery_interval and (
+                last_batch or (batch_idx + 1) % args.recovery_interval == 0):
+            saver.save_recovery(epoch, batch_idx=batch_idx)
+
         if lr_scheduler is not None:
-            if args.tl:
-                lr_scheduler.step()
-            else:
-                lr_scheduler.step_update(num_updates=num_updates, metric=losses_m.avg)
+            lr_scheduler.step_update(num_updates=num_updates, metric=losses_m.avg)
 
         end = time.time()
         # end for
