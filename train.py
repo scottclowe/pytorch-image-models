@@ -457,7 +457,7 @@ def main():
     # optionally resume from a checkpoint
     resume_epoch = None
     resume_path = os.path.join(args.resume, 'recover.pth.tar')
-    if args.resume:
+    if args.resume and os.path.exists(resume_path):
         resume_epoch = resume_checkpoint(
             model, resume_path,
             optimizer=None if args.no_resume_opt else optimizer,
