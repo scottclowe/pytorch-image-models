@@ -40,3 +40,4 @@ echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
 ./distributed_train.sh 2 /scratch/ssd001/datasets/imagenet/ --initial-checkpoint $INIT_CHECK --model efficientnet_b0 -b 384 --seed $SEED --output $SAVE_PATH --check-path $CHECK_PATH --pretrained --tl --tl-layers 8full_9full --sched step --epochs 450 --decay-epochs 2.4 --decay-rate .97 --opt rmsproptf --opt-eps .001 -j 8 --warmup-lr 1e-6 --weight-decay 1e-5 --drop 0.2 --drop-connect 0.2 --model-ema --model-ema-decay 0.9999 --aa original --remode pixel --reprob 0.2 --amp --lr .048
+
