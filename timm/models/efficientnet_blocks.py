@@ -233,8 +233,8 @@ class InvertedResidual(nn.Module):
             padding=pad_type, depthwise=True, **conv_kwargs)
         self.bn2 = norm_layer(mid_chs, **norm_kwargs)
         print(type(act_layer()))
-        print(isinstance(act_layer, activation_functions.activation_factory))
         self.act2 = act_layer(inplace=True)
+        print(isinstance(self.act2, activation_functions.activation_factory))
 
         # Squeeze-and-excitation
         if has_se:
