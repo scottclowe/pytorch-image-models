@@ -240,7 +240,7 @@ class InvertedResidual(nn.Module):
             activations = int(self.act1.get_actfun_multiplier() * mid_chs)
 
         # Depth-wise convolution
-        print(activations, )
+        print(activations)
         self.conv_dw = create_conv2d(
             activations, mid_chs, dw_kernel_size, stride=stride, dilation=dilation,
             padding=pad_type, depthwise=True, **conv_kwargs)
@@ -261,6 +261,7 @@ class InvertedResidual(nn.Module):
         # Point-wise linear projection
         self.conv_pwl = create_conv2d(activations, out_chs, pw_kernel_size, padding=pad_type, **conv_kwargs)
         self.bn3 = norm_layer(out_chs, **norm_kwargs)
+        print()
 
     def feature_info(self, location):
         if location == 'expansion':  # after SE, input to PWL
