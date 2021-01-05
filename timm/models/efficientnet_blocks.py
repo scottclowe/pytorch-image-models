@@ -165,17 +165,25 @@ class DepthwiseSeparableConv(nn.Module):
             in_chs, in_chs, dw_kernel_size, stride=stride, dilation=dilation, padding=pad_type, depthwise=True)
         self.bn1 = norm_layer(in_chs, **norm_kwargs)
         self.act1 = act_layer(inplace=True)
+        activations = in_chs
+        if isinstance(self.act1, activation_functions.HigherOrderActivation):
+            self.act1.init_shuffle_maps(in_chs)
+            activations = self.act1.get_actfun_multiplier() * in_chs
 
         # Squeeze-and-excitation
         if has_se:
             se_kwargs = resolve_se_args(se_kwargs, in_chs, act_layer)
-            self.se = SqueezeExcite(in_chs, se_ratio=se_ratio, **se_kwargs)
+            self.se = SqueezeExcite(activations, se_ratio=se_ratio, **se_kwargs)
         else:
             self.se = None
 
-        self.conv_pw = create_conv2d(in_chs, out_chs, pw_kernel_size, padding=pad_type)
+        self.conv_pw = create_conv2d(activations, out_chs, pw_kernel_size, padding=pad_type)
         self.bn2 = norm_layer(out_chs, **norm_kwargs)
         self.act2 = act_layer(inplace=True) if self.has_pw_act else nn.Identity()
+        activations = out_chs
+        if isinstance(self.act2, activation_functions.HigherOrderActivation):
+            self.act2.init_shuffle_maps(out_chs)
+            activations = self.act2.get_actfun_multiplier() * out_chs
 
     def feature_info(self, location):
         if location == 'expansion':  # after SE, input to PW
@@ -218,7 +226,6 @@ class InvertedResidual(nn.Module):
         conv_kwargs = conv_kwargs or {}
         mid_chs = make_divisible(in_chs * exp_ratio)
         has_se = se_ratio is not None and se_ratio > 0.
-        actfun_multiplier = 1
         self.has_residual = (in_chs == out_chs and stride == 1) and not noskip
         self.drop_path_rate = drop_path_rate
 
@@ -227,30 +234,31 @@ class InvertedResidual(nn.Module):
         self.bn1 = norm_layer(mid_chs, **norm_kwargs)
         # print(self.conv_pw)
         self.act1 = act_layer(inplace=True)
-        # if isinstance(self.act1, activation_functions.HigherOrderActivation):
-        #     actfun_multiplier = self.act1.get_actfun_multiplier()
+        activations = mid_chs
+        if isinstance(self.act1, activation_functions.HigherOrderActivation):
+            self.act1.init_shuffle_maps(mid_chs)
+            activations = self.act1.get_actfun_multiplier() * mid_chs
 
         # Depth-wise convolution
         self.conv_dw = create_conv2d(
-            mid_chs, mid_chs, dw_kernel_size, stride=stride, dilation=dilation,
+            activations, mid_chs, dw_kernel_size, stride=stride, dilation=dilation,
             padding=pad_type, depthwise=True, **conv_kwargs)
         self.bn2 = norm_layer(mid_chs, **norm_kwargs)
-        # print(type(act_layer()))
         self.act2 = act_layer(inplace=True)
-        # print(isinstance(self.act2, activation_functions.activation_factory))
-        # if isinstance(self.act2, activation_functions.activation_factory):
-        #     print(self.act2.actfun)
-        # print(actfun_multiplier)
+        activations = mid_chs
+        if isinstance(self.act2, activation_functions.HigherOrderActivation):
+            self.act2.init_shuffle_maps(mid_chs)
+            activations = self.act1.get_actfun_multiplier() * mid_chs
 
         # Squeeze-and-excitation
         if has_se:
             se_kwargs = resolve_se_args(se_kwargs, in_chs, act_layer)
-            self.se = SqueezeExcite(mid_chs, se_ratio=se_ratio, **se_kwargs)
+            self.se = SqueezeExcite(activations, se_ratio=se_ratio, **se_kwargs)
         else:
             self.se = None
 
         # Point-wise linear projection
-        self.conv_pwl = create_conv2d(mid_chs, out_chs, pw_kernel_size, padding=pad_type, **conv_kwargs)
+        self.conv_pwl = create_conv2d(activations, out_chs, pw_kernel_size, padding=pad_type, **conv_kwargs)
         self.bn3 = norm_layer(out_chs, **norm_kwargs)
 
     def feature_info(self, location):

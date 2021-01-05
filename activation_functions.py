@@ -21,12 +21,13 @@ class HigherOrderActivation:
         pass
 
     def __call__(self, input: Tensor) -> Tensor:
-        if self.shuffle_maps is None:
-            print("Generating Shuffle Maps!")
-            self.shuffle_maps = []
-            for i in range(self.p):
-                self.shuffle_maps.append(torch.randperm(input.shape[1]))
         return activate(input, self.actfun, p=self.p, k=self.k, shuffle_maps=self.shuffle_maps)
+
+    def init_shuffle_maps(self, num_channels):
+        print("Generating Shuffle Maps!")
+        self.shuffle_maps = []
+        for i in range(self.p):
+            self.shuffle_maps.append(torch.randperm(num_channels))
 
     def get_actfun_multiplier(self):
         if self.actfun is not None and self.p is not None and self.k is not None:
@@ -153,9 +154,6 @@ def activate(x, actfun, p=1, k=2, M=None,
     elif actfun == 'groupsort':
         x = groupsort(x, layer_type)
     else:
-        # print(x.shape)
-        # x = x.squeeze()
-        # print(x.shape)
         x = _ACTFUNS[actfun](x)
 
     return x
