@@ -20,7 +20,11 @@ class activation_factory():
         pass
 
     def __call__(self, input: Tensor) -> Tensor:
-        return activate(input, self.actfun, p=self.p, k=self.k)
+        # print(input.shape)
+        output = activate(input, self.actfun, p=self.p, k=self.k)
+        # print(output.shape)
+        # print()
+        return output
 
     def get_actfun_multiplier(self):
         if self.actfun is not None and self.p is not None and self.k is not None:
