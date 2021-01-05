@@ -480,6 +480,8 @@ def main():
             model = model.to(memory_format=torch.channels_last)
         _logger.info('============ LOADED CHECKPOINT: Epoch {}'.format(resume_epoch))
 
+    model_raw = model
+
     # setup exponential moving average of model weights, SWA could be used here too
     model_ema = None
     if args.model_ema:
@@ -639,7 +641,7 @@ def main():
         for epoch in range(start_epoch, num_epochs):
 
             if os.path.exists(args.check_path):
-                torch.save({'model': model.state_dict(),
+                torch.save({'model': model_raw.state_dict(),
                             'model_ema': model_ema.state_dict(),
                             'optimizer': optimizer.state_dict(),
                             'scheduler': lr_scheduler.state_dict(),
