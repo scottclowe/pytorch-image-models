@@ -242,14 +242,13 @@ class InvertedResidual(nn.Module):
         # Depth-wise convolution
         print(activations)
         self.conv_dw = create_conv2d(
-            activations, mid_chs, dw_kernel_size, stride=stride, dilation=dilation,
+            activations, activations, dw_kernel_size, stride=stride, dilation=dilation,
             padding=pad_type, depthwise=True, **conv_kwargs)
-        self.bn2 = norm_layer(mid_chs, **norm_kwargs)
+        self.bn2 = norm_layer(activations, **norm_kwargs)
         self.act2 = act_layer(inplace=True)
-        activations = mid_chs
         if isinstance(self.act2, activation_functions.HigherOrderActivation):
             self.act2.init_shuffle_maps(mid_chs)
-            activations = int(self.act2.get_actfun_multiplier() * mid_chs)
+            activations = int(self.act2.get_actfun_multiplier() * activations)
 
         # Squeeze-and-excitation
         if has_se:
@@ -261,7 +260,6 @@ class InvertedResidual(nn.Module):
         # Point-wise linear projection
         self.conv_pwl = create_conv2d(activations, out_chs, pw_kernel_size, padding=pad_type, **conv_kwargs)
         self.bn3 = norm_layer(out_chs, **norm_kwargs)
-        print()
 
     def feature_info(self, location):
         if location == 'expansion':  # after SE, input to PWL
