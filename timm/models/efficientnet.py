@@ -372,11 +372,11 @@ class EfficientNet(nn.Module):
         print("-----------1")
         self.act2 = act_layer(inplace=True)
         print("-----------2")
-        activations = num_features
+        self.activations = num_features
         if isinstance(self.act2, activation_functions.HigherOrderActivation):
             self.act2.init_shuffle_maps(num_features)
-            activations = int(self.act2.get_actfun_multiplier() * num_features)
-        self.global_pool, self.classifier = create_classifier(activations, self.num_classes, pool_type=global_pool)
+            self.activations = int(self.act2.get_actfun_multiplier() * num_features)
+        self.global_pool, self.classifier = create_classifier(self.activations, self.num_classes, pool_type=global_pool)
 
         efficientnet_init_weights(self)
 
@@ -393,7 +393,7 @@ class EfficientNet(nn.Module):
     def reset_classifier(self, num_classes, global_pool='avg'):
         self.num_classes = num_classes
         self.global_pool, self.classifier = create_classifier(
-            self.num_features, self.num_classes, pool_type=global_pool)
+            self.activations, self.num_classes, pool_type=global_pool)
 
     def forward_features(self, x):
         x = self.conv_stem(x)
