@@ -251,6 +251,10 @@ class EfficientNetBuilder:
 
     def _make_block(self, ba, block_idx, block_count):
         drop_path_rate = self.drop_path_rate * block_idx / block_count
+        if ba['out_chs'] == 320:
+            high_ord = True
+            print("=========================")
+            print(ba)
         bt = ba.pop('block_type')
         ba['in_chs'] = self.in_chs
         ba['out_chs'] = self._round_channels(ba['out_chs'])
@@ -262,6 +266,7 @@ class EfficientNetBuilder:
         ba['pad_type'] = self.pad_type
         # block act fn overrides the model default
         ba['act_layer'] = ba['act_layer'] if ba['act_layer'] is not None else self.act_layer
+        print(self.act_layer)
         assert ba['act_layer'] is not None
         if bt == 'ir':
             ba['drop_path_rate'] = drop_path_rate
@@ -315,6 +320,7 @@ class EfficientNetBuilder:
 
         # outer list of block_args defines the stacks
         for stack_idx, stack_args in enumerate(model_block_args):
+            print(stack_idx, stack_args)
             last_stack = stack_idx + 1 == len(model_block_args)
             _log_info_if('Stack: {}'.format(stack_idx), self.verbose)
             assert isinstance(stack_args, list)
