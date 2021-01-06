@@ -9,7 +9,7 @@ import numbers
 import time
 
 
-class HigherOrderActivation:
+class HigherOrderActivation(nn.Module):
 
     actfun = None
     p = None
@@ -18,9 +18,10 @@ class HigherOrderActivation:
     shuffle_maps = None
 
     def __init__(self, inplace=False):
-        pass
+        super(HigherOrderActivation, self).__init__()
+        self.inplace = inplace
 
-    def __call__(self, input: Tensor) -> Tensor:
+    def forward(self, input: Tensor) -> Tensor:
         return activate(input, self.actfun, p=self.p, k=self.k, shuffle_maps=self.shuffle_maps)
 
     def init_shuffle_maps(self, num_channels):
