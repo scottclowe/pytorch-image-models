@@ -479,7 +479,8 @@ def main():
         model.load_state_dict(cp_loaded['model'])
         optimizer.load_state_dict(cp_loaded['optimizer'])
         resume_epoch = cp_loaded['epoch']
-        loss_scaler.load_state_dict(cp_loaded['amp'])
+        if args.amp:
+            loss_scaler.load_state_dict(cp_loaded['amp'])
         model.cuda()
         if args.channels_last:
             model = model.to(memory_format=torch.channels_last)
@@ -657,12 +658,15 @@ def main():
         for epoch in range(start_epoch, num_epochs):
 
             if os.path.exists(args.check_path):
+                amp_loss = None
+                if args.amp:
+                    amp_loss = loss_scaler.state_dict()
                 torch.save({'model': model_raw.state_dict(),
                             'model_ema': model_ema.state_dict(),
                             'optimizer': optimizer.state_dict(),
                             'scheduler': lr_scheduler.state_dict(),
                             'epoch': epoch,
-                            'amp': loss_scaler.state_dict()
+                            'amp': amp_loss
                             }, check_path)
                 _logger.info('============ SAVED CHECKPOINT: Epoch {}'.format(epoch))
 
