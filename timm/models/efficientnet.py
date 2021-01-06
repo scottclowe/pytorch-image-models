@@ -337,6 +337,7 @@ class EfficientNet(nn.Module):
         super(EfficientNet, self).__init__()
         norm_kwargs = norm_kwargs or {}
 
+        print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
         print(actfun, p, k, g)
         self.num_classes = num_classes
         self.num_features = num_features
