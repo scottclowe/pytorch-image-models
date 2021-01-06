@@ -24,7 +24,6 @@ class HigherOrderActivation:
         return activate(input, self.actfun, p=self.p, k=self.k, shuffle_maps=self.shuffle_maps)
 
     def init_shuffle_maps(self, num_channels):
-        print("Generating Shuffle Maps!")
         self.shuffle_maps = []
         for i in range(self.p):
             self.shuffle_maps.append(torch.randperm(num_channels))

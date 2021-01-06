@@ -370,8 +370,6 @@ class EfficientNet(nn.Module):
         self.global_pool, self.classifier = create_classifier(activations, self.num_classes, pool_type=global_pool)
 
         efficientnet_init_weights(self)
-        print()
-        print()
 
     def as_sequential(self):
         layers = [self.conv_stem, self.bn1, self.act1]

@@ -110,7 +110,11 @@ class SqueezeExcite(nn.Module):
         reduced_chs = make_divisible((reduced_base_chs or in_chs) * se_ratio, divisor)
         self.conv_reduce = nn.Conv2d(in_chs, reduced_chs, 1, bias=True)
         self.act1 = act_layer(inplace=True)
-        self.conv_expand = nn.Conv2d(reduced_chs, in_chs, 1, bias=True)
+        activations = reduced_chs
+        if isinstance(self.act1, activation_functions.HigherOrderActivation):
+            self.act1.init_shuffle_maps(reduced_chs)
+            activations = int(self.act1.get_actfun_multiplier() * reduced_chs)
+        self.conv_expand = nn.Conv2d(activations, in_chs, 1, bias=True)
         self.gate_fn = gate_fn
 
     def forward(self, x):
@@ -180,10 +184,8 @@ class DepthwiseSeparableConv(nn.Module):
         self.conv_pw = create_conv2d(activations, out_chs, pw_kernel_size, padding=pad_type)
         self.bn2 = norm_layer(out_chs, **norm_kwargs)
         self.act2 = act_layer(inplace=True) if self.has_pw_act else nn.Identity()
-        activations = out_chs
         if isinstance(self.act2, activation_functions.HigherOrderActivation):
             self.act2.init_shuffle_maps(out_chs)
-            activations = int(self.act2.get_actfun_multiplier() * out_chs)
 
     def feature_info(self, location):
         if location == 'expansion':  # after SE, input to PW
@@ -232,7 +234,6 @@ class InvertedResidual(nn.Module):
         # Point-wise expansion
         self.conv_pw = create_conv2d(in_chs, mid_chs, exp_kernel_size, padding=pad_type, **conv_kwargs)
         self.bn1 = norm_layer(mid_chs, **norm_kwargs)
-        # print(self.conv_pw)
         self.act1 = act_layer(inplace=True)
         activations = mid_chs
         if isinstance(self.act1, activation_functions.HigherOrderActivation):
@@ -240,7 +241,6 @@ class InvertedResidual(nn.Module):
             activations = int(self.act1.get_actfun_multiplier() * mid_chs)
 
         # Depth-wise convolution
-        print(activations)
         self.conv_dw = create_conv2d(
             activations, activations, dw_kernel_size, stride=stride, dilation=dilation,
             padding=pad_type, depthwise=True, **conv_kwargs)
