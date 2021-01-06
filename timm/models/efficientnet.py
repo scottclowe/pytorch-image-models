@@ -337,8 +337,6 @@ class EfficientNet(nn.Module):
         super(EfficientNet, self).__init__()
         norm_kwargs = norm_kwargs or {}
 
-        print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
-        print(actfun, p, k, g)
         self.num_classes = num_classes
         self.num_features = num_features
         self.drop_rate = drop_rate
@@ -365,13 +363,15 @@ class EfficientNet(nn.Module):
         # Head + Pooling
         self.conv_head = create_conv2d(head_chs, self.num_features, 1, padding=pad_type)
         self.bn2 = norm_layer(self.num_features, **norm_kwargs)
-        # if actfun != 'swish':
-        #     act_layer = activation_functions.HigherOrderActivation
-        #     act_layer.actfun = actfun
-        #     act_layer.p = p
-        #     act_layer.k = k
-        #     act_layer.g = g
+        if actfun != 'swish':
+            act_layer = activation_functions.HigherOrderActivation
+            act_layer.actfun = actfun
+            act_layer.p = p
+            act_layer.k = k
+            act_layer.g = g
+        print("-----------1")
         self.act2 = act_layer(inplace=True)
+        print("-----------2")
         activations = num_features
         if isinstance(self.act2, activation_functions.HigherOrderActivation):
             self.act2.init_shuffle_maps(num_features)
