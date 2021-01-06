@@ -387,20 +387,28 @@ class EfficientNet(nn.Module):
             self.num_features, self.num_classes, pool_type=global_pool)
 
     def forward_features(self, x):
+        print("EfficientNet in")
         x = self.conv_stem(x)
         x = self.bn1(x)
+        print("act1")
         x = self.act1(x)
+        print("blocks")
         x = self.blocks(x)
+        print("out")
         x = self.conv_head(x)
         x = self.bn2(x)
+        print("act2")
         x = self.act2(x)
         return x
 
     def forward(self, x):
         x = self.forward_features(x)
+        print("pool")
         x = self.global_pool(x)
         if self.drop_rate > 0.:
+            print("dropout")
             x = F.dropout(x, p=self.drop_rate, training=self.training)
+        print("classifier")
         return self.classifier(x)
 
 

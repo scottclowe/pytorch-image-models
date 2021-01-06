@@ -251,10 +251,6 @@ class EfficientNetBuilder:
 
     def _make_block(self, ba, block_idx, block_count):
         drop_path_rate = self.drop_path_rate * block_idx / block_count
-        # if ba['out_chs'] == 320:
-        #     high_ord = True
-        #     print("=========================")
-        #     print(ba)
         bt = ba.pop('block_type')
         ba['in_chs'] = self.in_chs
         ba['out_chs'] = self._round_channels(ba['out_chs'])
