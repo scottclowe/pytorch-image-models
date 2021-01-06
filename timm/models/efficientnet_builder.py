@@ -222,9 +222,8 @@ class EfficientNetBuilder:
     def __init__(self, channel_multiplier=1.0, channel_divisor=8, channel_min=None,
                  output_stride=32, pad_type='', act_layer=None, se_kwargs=None,
                  norm_layer=nn.BatchNorm2d, norm_kwargs=None, drop_path_rate=0., feature_location='',
-                 verbose=False, actfun_multiplier=1):
+                 verbose=False, actfun='swish', p=1, k=2, g=1, tl_layers=None):
         self.channel_multiplier = channel_multiplier
-        # self.actfun_multiplier = actfun_multiplier
         self.channel_divisor = channel_divisor
         self.channel_min = channel_min
         self.output_stride = output_stride
@@ -234,6 +233,11 @@ class EfficientNetBuilder:
         self.norm_layer = norm_layer
         self.norm_kwargs = norm_kwargs
         self.drop_path_rate = drop_path_rate
+        self.actfun = actfun
+        self.p = p
+        self.k = k
+        self.g = g
+        self.tl_layers = tl_layers
         if feature_location == 'depthwise':
             # old 'depthwise' mode renamed 'expansion' to match TF impl, old expansion mode didn't make sense
             _logger.warning("feature_location=='depthwise' is deprecated, using 'expansion'")
@@ -251,6 +255,15 @@ class EfficientNetBuilder:
 
     def _make_block(self, ba, block_idx, block_count):
         drop_path_rate = self.drop_path_rate * block_idx / block_count
+
+        if self.actfun != 'swish' and self.tl_layers == '8full_9full' and ba['out_chs'] == 320:
+            act_layer = activation_functions.HigherOrderActivation
+            act_layer.actfun = self.actfun
+            act_layer.p = self.p
+            act_layer.k = self.k
+            act_layer.g = self.g
+            ba['act_layer'] = act_layer
+
         # if ba['out_chs'] == 320:
         #     high_ord = True
         #     print("=========================")
@@ -267,7 +280,7 @@ class EfficientNetBuilder:
         ba['pad_type'] = self.pad_type
         # block act fn overrides the model default
         ba['act_layer'] = ba['act_layer'] if ba['act_layer'] is not None else self.act_layer
-        # print(self.act_layer)
+        print(ba['out_chs'], ba['act_layer'])
         assert ba['act_layer'] is not None
         if bt == 'ir':
             ba['drop_path_rate'] = drop_path_rate

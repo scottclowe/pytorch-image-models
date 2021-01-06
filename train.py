@@ -355,7 +355,8 @@ def main():
         checkpoint_path=args.initial_checkpoint,
         p=args.p,
         k=args.k,
-        g=args.g
+        g=args.g,
+        tl_layers=args.tl_layers
     )
 
     if args.tl:
