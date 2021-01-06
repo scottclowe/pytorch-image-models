@@ -341,7 +341,7 @@ def main():
     model = create_model(
         args.model,
         pretrained=args.pretrained,
-        actfun='swish',
+        actfun=args.actfun,
         num_classes=args.num_classes,
         drop_rate=args.drop,
         drop_connect_rate=args.drop_connect,  # DEPRECATED, use drop_path
@@ -360,6 +360,26 @@ def main():
     )
 
     if args.tl:
+        model = create_model(
+            args.model,
+            pretrained=args.pretrained,
+            actfun='swish',
+            num_classes=args.num_classes,
+            drop_rate=args.drop,
+            drop_connect_rate=args.drop_connect,  # DEPRECATED, use drop_path
+            drop_path_rate=args.drop_path,
+            drop_block_rate=args.drop_block,
+            global_pool=args.gp,
+            bn_tf=args.bn_tf,
+            bn_momentum=args.bn_momentum,
+            bn_eps=args.bn_eps,
+            scriptable=args.torchscript,
+            checkpoint_path=args.initial_checkpoint,
+            p=args.p,
+            k=args.k,
+            g=args.g,
+            tl_layers=args.tl_layers
+        )
         model_new = create_model(
             args.model,
             pretrained=False,

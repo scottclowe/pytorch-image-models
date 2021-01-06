@@ -369,9 +369,7 @@ class EfficientNet(nn.Module):
             act_layer.p = p
             act_layer.k = k
             act_layer.g = g
-        # print("-----------1")
         self.act2 = act_layer(inplace=True)
-        # print("-----------2")
         self.activations = num_features
         if isinstance(self.act2, activation_functions.HigherOrderActivation):
             self.act2.init_shuffle_maps(num_features)
