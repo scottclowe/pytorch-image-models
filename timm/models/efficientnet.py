@@ -387,7 +387,6 @@ class EfficientNet(nn.Module):
             self.num_features, self.num_classes, pool_type=global_pool)
 
     def forward_features(self, x):
-        print("EfficientNet in")
         x = self.conv_stem(x)
         x = self.bn1(x)
         print("act1")
@@ -402,6 +401,7 @@ class EfficientNet(nn.Module):
         return x
 
     def forward(self, x):
+        print("EfficientNet in")
         x = self.forward_features(x)
         print("pool")
         x = self.global_pool(x)
