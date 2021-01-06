@@ -372,11 +372,11 @@ class EfficientNet(nn.Module):
         # print("-----------1")
         self.act2 = act_layer(inplace=True)
         # print("-----------2")
-        # self.activations = num_features
-        # if isinstance(self.act2, activation_functions.HigherOrderActivation):
-        #     self.act2.init_shuffle_maps(num_features)
-        #     activations = int(self.act2.get_actfun_multiplier() * num_features)
-        self.global_pool, self.classifier = create_classifier(num_features, self.num_classes, pool_type=global_pool)
+        self.activations = num_features
+        if isinstance(self.act2, activation_functions.HigherOrderActivation):
+            self.act2.init_shuffle_maps(num_features)
+            self.activations = int(self.act2.get_actfun_multiplier() * num_features)
+        self.global_pool, self.classifier = create_classifier(self.activations, self.num_classes, pool_type=global_pool)
 
         efficientnet_init_weights(self)
 
