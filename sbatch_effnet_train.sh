@@ -8,7 +8,7 @@
 #SBATCH --mem=128G                           # memory per node
 #SBATCH --time=500:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0%1                    # array value
-#SBATCH --output=logs_new/ef_tl_ho_9full2/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --output=logs_new/ef_tl_ho_8full_9full2/%a-%N-%j    # %N for node name, %j for jobID
 #SBATCH --job-name=ef_tl_ho_8full_9full2
 
 source ~/.bashrc
