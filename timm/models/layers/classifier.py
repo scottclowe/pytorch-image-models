@@ -10,7 +10,6 @@ from .linear import Linear
 
 
 def create_classifier(num_features, num_classes, pool_type='avg', use_conv=False):
-    print(num_features)
     flatten = not use_conv  # flatten when we use a Linear layer after pooling
     if not pool_type:
         assert num_classes == 0 or use_conv,\

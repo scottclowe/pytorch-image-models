@@ -267,7 +267,6 @@ def combinact(x, p, layer_type='linear', alpha_primes=None, alpha_dist=None, red
     num_clusters = x.shape[1]
     img_size = x.shape[-1]
 
-    # print(alpha_primes.shape)
     layer_alphas = F.softmax(alpha_primes, dim=1)  # Convert alpha prime to alpha
 
     # Computing all activation functions

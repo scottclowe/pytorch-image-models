@@ -386,11 +386,9 @@ def main():
             intro_layers = model_layers[:3]
             main_layers = list(model_layers[3])
             model1_layers = intro_layers + main_layers[:-1]
-            # print(model1_layers)
             main_layers_new = list(model_new_layers[3])
             outro_layers = model_new_layers[4:]
             model2_layers = main_layers_new[-1:] + outro_layers
-            # print(model2_layers)
         elif args.tl_layers == '9full':
             model1_layers = model_layers[:4]
             model2_layers = model_new_layers[4:]
@@ -743,8 +741,6 @@ def train_epoch(
             if pre_model is not None:
                 with torch.no_grad():
                     input = pre_model(input)
-            # print(input.shape)
-            # print(list(model.children()))
             output = model(input)
             loss = loss_fn(output, target)
 
