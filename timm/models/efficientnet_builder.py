@@ -264,11 +264,6 @@ class EfficientNetBuilder:
             act_layer.g = self.g
             ba['act_layer'] = act_layer
 
-        # if ba['out_chs'] == 320:
-        #     high_ord = True
-        #     print("=========================")
-        #     print(ba)
-        #     print(type(ba))
         bt = ba.pop('block_type')
         ba['in_chs'] = self.in_chs
         ba['out_chs'] = self._round_channels(ba['out_chs'])
@@ -334,7 +329,6 @@ class EfficientNetBuilder:
 
         # outer list of block_args defines the stacks
         for stack_idx, stack_args in enumerate(model_block_args):
-            print(stack_idx, stack_args)
             last_stack = stack_idx + 1 == len(model_block_args)
             _log_info_if('Stack: {}'.format(stack_idx), self.verbose)
             assert isinstance(stack_args, list)
