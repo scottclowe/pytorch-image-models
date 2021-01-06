@@ -386,11 +386,9 @@ def main():
             intro_layers = model_layers[:3]
             main_layers = list(model_layers[3])
             model1_layers = intro_layers + main_layers[:-1]
-            # print(model1_layers)
             main_layers_new = list(model_new_layers[3])
             outro_layers = model_new_layers[4:]
             model2_layers = main_layers_new[-1:] + outro_layers
-            print(model2_layers)
         elif args.tl_layers == '9full':
             model1_layers = model_layers[:4]
             model2_layers = model_new_layers[4:]
@@ -472,7 +470,10 @@ def main():
 
     cp_loaded = None
     resume_epoch = None
-    check_path = os.path.join(args.check_path, 'recover') + '.pth'
+    checkname = 'recover'
+    if args.actfun != 'swish':
+        checkname = '{}_'.format(args.actfun) + checkname
+    check_path = os.path.join(args.check_path, checkname) + '.pth'
     if os.path.isfile(check_path):
         cp_loaded = torch.load(check_path)
         model.load_state_dict(cp_loaded['model'])
@@ -643,7 +644,10 @@ def main():
 
     fieldnames = ['seed', 'actfun', 'epoch', 'batch_idx',
                   'loss', 'loss_avg', 'acc1', 'acc1_avg', 'acc5', 'acc5_avg', 'ema']
-    outfile_path = os.path.join(args.output, 'output') + '.csv'
+    filename = 'output'
+    if args.actfun != 'swish':
+        filename = '{}_'.format(args.actfun) + filename
+    outfile_path = os.path.join(args.output, filename) + '.csv'
     if not os.path.exists(outfile_path):
         with open(outfile_path, mode='w') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
