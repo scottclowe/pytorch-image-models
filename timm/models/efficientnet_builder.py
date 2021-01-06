@@ -255,7 +255,6 @@ class EfficientNetBuilder:
             high_ord = True
             print("=========================")
             print(ba)
-            print(ba[0])
             print(type(ba))
         bt = ba.pop('block_type')
         ba['in_chs'] = self.in_chs
