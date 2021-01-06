@@ -246,11 +246,17 @@ def logistic_and_approx(z):
 
 
 def logistic_or_approx(z):
-    return torch.where(
-        (z > 0).all(dim=2),
-        z.sum(dim=2),
-        torch.max(z, dim=2).values,
-    )
+    if (z > 0).all(dim=2):
+        z = z.sum(dim=2)
+    else:
+        z = torch.max(z, dim=2).values
+    return z
+
+    # return torch.where(
+    #     (z > 0).all(dim=2),
+    #     z.sum(dim=2),
+    #     torch.max(z, dim=2).values,
+    # )
 
 
 def logistic_xnor_approx(z):
