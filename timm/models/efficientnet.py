@@ -332,10 +332,12 @@ class EfficientNet(nn.Module):
     def __init__(self, block_args, num_classes=1000, num_features=1280, in_chans=3, stem_size=32,
                  channel_multiplier=1.0, channel_divisor=8, channel_min=None,
                  output_stride=32, pad_type='', fix_stem=False, act_layer=nn.ReLU, drop_rate=0., drop_path_rate=0.,
-                 se_kwargs=None, norm_layer=nn.BatchNorm2d, norm_kwargs=None, global_pool='avg'):
+                 se_kwargs=None, norm_layer=nn.BatchNorm2d, norm_kwargs=None, global_pool='avg', actfun='swish',
+                 p=1, k=2, g=1):
         super(EfficientNet, self).__init__()
         norm_kwargs = norm_kwargs or {}
 
+        print(actfun, p, k, g)
         self.num_classes = num_classes
         self.num_features = num_features
         self.drop_rate = drop_rate
@@ -714,19 +716,18 @@ def _gen_efficientnet(variant, channel_multiplier=1.0, depth_multiplier=1.0, pre
         ['ir_r4_k5_s2_e6_c192_se0.25'],
         ['ir_r1_k3_s1_e6_c320_se0.25'],
     ]
-    actfun = kwargs.pop('actfun')
-    p = kwargs.pop('p')
-    k = kwargs.pop('k')
-    g = kwargs.pop('g')
-    if actfun == 'swish':
-        act_layer = resolve_act_layer(kwargs, 'swish')
-        actfun_multiplier = 1
-    else:
-        act_layer = activation_functions.HigherOrderActivation
-        act_layer.actfun = actfun
-        act_layer.p = p
-        act_layer.k = k
-        act_layer.g = g
+    # actfun = kwargs.pop('actfun')
+    # p = kwargs.pop('p')
+    # k = kwargs.pop('k')
+    # g = kwargs.pop('g')
+    # if actfun == 'swish':
+    act_layer = resolve_act_layer(kwargs, 'swish')
+    # else:
+    #     act_layer = activation_functions.HigherOrderActivation
+    #     act_layer.actfun = actfun
+    #     act_layer.p = p
+    #     act_layer.k = k
+    #     act_layer.g = g
     model_kwargs = dict(
         block_args=decode_arch_def(arch_def, depth_multiplier),
         num_features=round_channels(1280, channel_multiplier, 8, None),

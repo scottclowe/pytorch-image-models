@@ -251,11 +251,11 @@ class EfficientNetBuilder:
 
     def _make_block(self, ba, block_idx, block_count):
         drop_path_rate = self.drop_path_rate * block_idx / block_count
-        if ba['out_chs'] == 320:
-            high_ord = True
-            print("=========================")
-            print(ba)
-            print(type(ba))
+        # if ba['out_chs'] == 320:
+        #     high_ord = True
+        #     print("=========================")
+        #     print(ba)
+        #     print(type(ba))
         bt = ba.pop('block_type')
         ba['in_chs'] = self.in_chs
         ba['out_chs'] = self._round_channels(ba['out_chs'])
@@ -267,7 +267,7 @@ class EfficientNetBuilder:
         ba['pad_type'] = self.pad_type
         # block act fn overrides the model default
         ba['act_layer'] = ba['act_layer'] if ba['act_layer'] is not None else self.act_layer
-        print(self.act_layer)
+        # print(self.act_layer)
         assert ba['act_layer'] is not None
         if bt == 'ir':
             ba['drop_path_rate'] = drop_path_rate
