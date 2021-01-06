@@ -743,8 +743,8 @@ def train_epoch(
             if pre_model is not None:
                 with torch.no_grad():
                     input = pre_model(input)
-            print(input.shape)
-            print(list(model.children()))
+            # print(input.shape)
+            # print(list(model.children()))
             output = model(input)
             loss = loss_fn(output, target)
 

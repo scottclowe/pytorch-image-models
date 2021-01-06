@@ -365,12 +365,12 @@ class EfficientNet(nn.Module):
         # Head + Pooling
         self.conv_head = create_conv2d(head_chs, self.num_features, 1, padding=pad_type)
         self.bn2 = norm_layer(self.num_features, **norm_kwargs)
-        if actfun != 'swish':
-            act_layer = activation_functions.HigherOrderActivation
-            act_layer.actfun = actfun
-            act_layer.p = p
-            act_layer.k = k
-            act_layer.g = g
+        # if actfun != 'swish':
+        #     act_layer = activation_functions.HigherOrderActivation
+        #     act_layer.actfun = actfun
+        #     act_layer.p = p
+        #     act_layer.k = k
+        #     act_layer.g = g
         self.act2 = act_layer(inplace=True)
         activations = num_features
         if isinstance(self.act2, activation_functions.HigherOrderActivation):
