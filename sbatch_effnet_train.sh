@@ -3,13 +3,13 @@
 #SBATCH --exclude=gpu102
 #SBATCH --exclude=gpu115
 #SBATCH --gres=gpu:4                        # request GPU(s)
-#SBATCH --qos=high
+#SBATCH --qos=normal
 #SBATCH -c 24                                # number of CPU cores
 #SBATCH --mem=128G                           # memory per node
 #SBATCH --time=500:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0%1                    # array value
-#SBATCH --output=logs_new/ef_swish/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=ef_swish
+#SBATCH --output=logs_new/ef_ho_amp/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=ef_ho_amp
 
 source ~/.bashrc
 source activate ~/venvs/efficientnet_train
