@@ -270,6 +270,8 @@ parser.add_argument('--g', type=int, default=1, metavar='g',
                     help='Inter layer group size')
 parser.add_argument('--check-path', default='', type=str, metavar='PATH',
                     help='Path for recording checkpoints')
+parser.add_argument('--control-amp', default='', type=str, metavar='PATH',
+                    help='Allows user to specify whether or not we want to use amp')
 
 
 def _parse_args():
@@ -312,13 +314,17 @@ def main():
         _logger.info('Training with a single process on 1 GPUs.')
     assert args.rank >= 0
 
+    if args.control_amp == 'amp':
+        args.amp = True
+    elif args.control_amp == 'apex':
+        args.apex_amp = True
+
     _logger.info(
         '====================\n\n'
         'Actfun: {}\n'
         'LR: {}\n'
         'Epochs: {}\n'
-        'Layers: {}\n'
-        '\n===================='.format(args.actfun, args.lr, args.epochs, args.tl_layers))
+        '\n===================='.format(args.actfun, args.lr, args.epochs))
 
     # resolve AMP arguments based on PyTorch / Apex availability
     use_amp = None
