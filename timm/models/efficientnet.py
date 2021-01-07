@@ -401,7 +401,6 @@ class EfficientNet(nn.Module):
         x = self.forward_features(x)
         x = self.global_pool(x)
         if self.drop_rate > 0.:
-            print("dropout")
             x = F.dropout(x, p=self.drop_rate, training=self.training)
 
         return self.classifier(x)
