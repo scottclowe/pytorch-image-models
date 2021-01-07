@@ -363,12 +363,6 @@ class EfficientNet(nn.Module):
         # Head + Pooling
         self.conv_head = create_conv2d(head_chs, self.num_features, 1, padding=pad_type)
         self.bn2 = norm_layer(self.num_features, **norm_kwargs)
-        if actfun != 'swish':
-            act_layer = activation_functions.HigherOrderActivation
-            act_layer.actfun = actfun
-            act_layer.p = p
-            act_layer.k = k
-            act_layer.g = g
         self.act2 = act_layer(inplace=True)
         self.activations = num_features
         if isinstance(self.act2, activation_functions.HigherOrderActivation):
@@ -396,26 +390,20 @@ class EfficientNet(nn.Module):
     def forward_features(self, x):
         x = self.conv_stem(x)
         x = self.bn1(x)
-        print("act1")
         x = self.act1(x)
-        print("blocks")
         x = self.blocks(x)
-        print("out")
         x = self.conv_head(x)
         x = self.bn2(x)
-        print("act2")
         x = self.act2(x)
         return x
 
     def forward(self, x):
-        print("EfficientNet in")
         x = self.forward_features(x)
-        print("pool")
         x = self.global_pool(x)
         if self.drop_rate > 0.:
             print("dropout")
             x = F.dropout(x, p=self.drop_rate, training=self.training)
-        print("classifier")
+
         return self.classifier(x)
 
 
@@ -721,18 +709,18 @@ def _gen_efficientnet(variant, channel_multiplier=1.0, depth_multiplier=1.0, pre
         ['ir_r4_k5_s2_e6_c192_se0.25'],
         ['ir_r1_k3_s1_e6_c320_se0.25'],
     ]
-    # actfun = kwargs.pop('actfun')
-    # p = kwargs.pop('p')
-    # k = kwargs.pop('k')
-    # g = kwargs.pop('g')
-    # if actfun == 'swish':
-    act_layer = resolve_act_layer(kwargs, 'swish')
-    # else:
-    #     act_layer = activation_functions.HigherOrderActivation
-    #     act_layer.actfun = actfun
-    #     act_layer.p = p
-    #     act_layer.k = k
-    #     act_layer.g = g
+    actfun = kwargs.pop('actfun')
+    p = kwargs.pop('p')
+    k = kwargs.pop('k')
+    g = kwargs.pop('g')
+    if actfun == 'swish':
+        act_layer = resolve_act_layer(kwargs, 'swish')
+    else:
+        act_layer = activation_functions.HigherOrderActivation
+        act_layer.actfun = actfun
+        act_layer.p = p
+        act_layer.k = k
+        act_layer.g = g
     model_kwargs = dict(
         block_args=decode_arch_def(arch_def, depth_multiplier),
         num_features=round_channels(1280, channel_multiplier, 8, None),

@@ -256,14 +256,6 @@ class EfficientNetBuilder:
     def _make_block(self, ba, block_idx, block_count):
         drop_path_rate = self.drop_path_rate * block_idx / block_count
 
-        if self.actfun != 'swish' and self.tl_layers == '8full_9full' and ba['out_chs'] == 320:
-            act_layer = activation_functions.HigherOrderActivation
-            act_layer.actfun = self.actfun
-            act_layer.p = self.p
-            act_layer.k = self.k
-            act_layer.g = self.g
-            ba['act_layer'] = act_layer
-
         bt = ba.pop('block_type')
         ba['in_chs'] = self.in_chs
         ba['out_chs'] = self._round_channels(ba['out_chs'])
