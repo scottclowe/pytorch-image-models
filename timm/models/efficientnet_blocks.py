@@ -107,7 +107,7 @@ class SqueezeExcite(nn.Module):
     def __init__(self, in_chs, se_ratio=0.25, reduced_base_chs=None,
                  act_layer=nn.ReLU, gate_fn=sigmoid, divisor=1, **kwargs):
         super(SqueezeExcite, self).__init__()
-        reduced_chs = make_divisible((reduced_base_chs or in_chs) * se_ratio * kwargs['extra_channel_multiplier'], divisor)
+        reduced_chs = make_divisible((reduced_base_chs or in_chs) * se_ratio * kwargs['extra_channel_multiplier'], divisor * act_layer.k)
         self.conv_reduce = nn.Conv2d(in_chs, reduced_chs, 1, bias=True)
         self.act1 = act_layer(inplace=True)
         activations = reduced_chs
