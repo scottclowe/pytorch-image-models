@@ -720,15 +720,14 @@ def main():
                 distribute_bn(model, args.world_size, args.dist_bn == 'reduce')
 
             eval_metrics = validate(model, loader_eval, validate_loss_fn, args, amp_autocast=amp_autocast,
-                                    pre_model=pre_model, outfile_path=outfile_path, fieldnames=fieldnames, epoch=epoch,
-                                    ema=False)
+                                    pre_model=pre_model)
 
             if model_ema is not None and not args.model_ema_force_cpu:
                 if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
                     distribute_bn(model_ema, args.world_size, args.dist_bn == 'reduce')
                 ema_eval_metrics = validate(
                     model_ema.module, loader_eval, validate_loss_fn, args, amp_autocast=amp_autocast, log_suffix=' (EMA)',
-                    pre_model=pre_model, outfile_path=outfile_path, fieldnames=fieldnames, epoch=epoch, ema=True)
+                    pre_model=pre_model)
                 eval_metrics = ema_eval_metrics
 
             if lr_scheduler is not None:
