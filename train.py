@@ -321,13 +321,6 @@ def main():
     elif args.control_amp == 'apex':
         args.apex_amp = True
 
-    _logger.info(
-        '====================\n\n'
-        'Actfun: {}\n'
-        'LR: {}\n'
-        'Epochs: {}\n'
-        '\n===================='.format(args.actfun, args.lr, args.epochs))
-
     # resolve AMP arguments based on PyTorch / Apex availability
     use_amp = None
     if args.amp:
@@ -343,6 +336,19 @@ def main():
     elif args.apex_amp or args.native_amp:
         _logger.warning("Neither APEX or native Torch AMP is available, using float32. "
                         "Install NVIDA apex or upgrade to PyTorch 1.6")
+
+    _logger.info(
+        '====================\n\n'
+        'Actfun: {}\n'
+        'LR: {}\n'
+        'Epochs: {}\n'
+        'p: {}\n'
+        'k: {}\n'
+        'g: {}\n'
+        'Extra channel multiplier: {}\n'
+        'AMP: {}\n'
+        '\n===================='.format(args.actfun, args.lr, args.epochs, args.p, args.k, args.g,
+                                        args.extra_channel_mult, use_amp))
 
     torch.manual_seed(args.seed + args.rank)
 

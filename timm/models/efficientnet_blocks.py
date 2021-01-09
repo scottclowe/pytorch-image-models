@@ -118,9 +118,13 @@ class SqueezeExcite(nn.Module):
         self.gate_fn = gate_fn
 
     def forward(self, x):
+        print(x.shape)
         x_se = x.mean((2, 3), keepdim=True)
+        print(x_se.shape)
         x_se = self.conv_reduce(x_se)
+        print(x_se.shape)
         x_se = self.act1(x_se)
+        print(x_se.shape)
         x_se = self.conv_expand(x_se)
         return x * self.gate_fn(x_se)
 
