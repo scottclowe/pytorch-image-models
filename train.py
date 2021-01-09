@@ -274,6 +274,8 @@ parser.add_argument('--control-amp', default='', type=str, metavar='PATH',
                     help='Allows user to specify whether or not we want to use amp')
 parser.add_argument('--extra-channel-mult', default=1.0, type=float, metavar='PATH',
                     help='Allows us to specify additional channel multiplier for higher order activations')
+parser.add_argument('--load-path', default='', type=str, metavar='PATH',
+                    help='Path for loading initial checkpoints')
 
 
 def _parse_args():
@@ -509,8 +511,13 @@ def main():
     if args.actfun != 'swish':
         checkname = '{}_'.format(args.actfun) + checkname
     check_path = os.path.join(args.check_path, checkname) + '.pth'
+    loader = None
     if os.path.isfile(check_path):
-        cp_loaded = torch.load(check_path)
+        loader = check_path
+    elif args.load_path != '' and os.path.isfile(args.load_path):
+        loader = args.load_path
+    if loader is not None:
+        cp_loaded = torch.load(loader)
         model.load_state_dict(cp_loaded['model'])
         optimizer.load_state_dict(cp_loaded['optimizer'])
         resume_epoch = cp_loaded['epoch']
@@ -520,6 +527,7 @@ def main():
         if args.channels_last:
             model = model.to(memory_format=torch.channels_last)
         _logger.info('============ LOADED CHECKPOINT: Epoch {}'.format(resume_epoch))
+
 
     model_raw = model
 
