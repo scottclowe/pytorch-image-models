@@ -14,6 +14,7 @@ def create_model(
         exportable=None,
         no_jit=None,
         p=1, k=2, g=1, tl_layers=None,
+        extra_channel_mult=1,
         **kwargs):
     """Create a model
 
@@ -33,7 +34,7 @@ def create_model(
         **: other kwargs are model specific
     """
     model_args = dict(pretrained=pretrained, num_classes=num_classes, in_chans=in_chans, actfun=actfun, p=p, k=k, g=g,
-                      tl_layers=tl_layers)
+                      tl_layers=tl_layers, extra_channel_mult=extra_channel_mult)
 
     # Only EfficientNet and MobileNetV3 models have support for batchnorm params or drop_connect_rate passed as args
     is_efficientnet = is_model_in_modules(model_name, ['efficientnet', 'mobilenetv3'])

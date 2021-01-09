@@ -272,6 +272,8 @@ parser.add_argument('--check-path', default='', type=str, metavar='PATH',
                     help='Path for recording checkpoints')
 parser.add_argument('--control-amp', default='', type=str, metavar='PATH',
                     help='Allows user to specify whether or not we want to use amp')
+parser.add_argument('--extra-channel-mult', default=1.0, type=float, metavar='PATH',
+                    help='Allows us to specify additional channel multiplier for higher order activations')
 
 
 def _parse_args():
@@ -362,7 +364,8 @@ def main():
         p=args.p,
         k=args.k,
         g=args.g,
-        tl_layers=args.tl_layers
+        tl_layers=args.tl_layers,
+        extra_channel_mult=args.extra_channel_mult
     )
 
     if args.tl:
@@ -726,6 +729,19 @@ def main():
                 # step LR for next epoch
                 lr_scheduler.step(epoch + 1, eval_metrics[eval_metric])
 
+            with open(outfile_path, mode='a') as out_file:
+                writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
+                writer.writerow({'seed': args.seed,
+                                 'actfun': args.actfun,
+                                 'epoch': epoch,
+                                 'lr': train_metrics['lr'],
+                                 'train_loss': train_metrics['loss'],
+                                 'eval_loss': eval_metrics['loss'],
+                                 'eval_acc1': eval_metrics['top1'],
+                                 'eval_acc5': eval_metrics['top5'],
+                                 'ema': model_ema is not None and not args.model_ema_force_cpu
+                                 })
+
             update_summary(
                 args.seed, epoch, args.lr, args.epochs, args.batch_size, args.actfun,
                 train_metrics, eval_metrics, os.path.join(output_dir, 'summary.csv'),
@@ -799,6 +815,7 @@ def train_epoch(
         torch.cuda.synchronize()
         num_updates += 1
         batch_time_m.update(time.time() - end)
+        lr = 0
         if last_batch or batch_idx % args.log_interval == 0:
             lrl = [param_group['lr'] for param_group in optimizer.param_groups]
             lr = sum(lrl) / len(lrl)
@@ -845,11 +862,10 @@ def train_epoch(
     if hasattr(optimizer, 'sync_lookahead'):
         optimizer.sync_lookahead()
 
-    return OrderedDict([('loss', losses_m.avg)])
+    return OrderedDict([('loss', losses_m.avg), ('lr', lr)])
 
 
-def validate(model, loader, loss_fn, args, amp_autocast=suppress, log_suffix='', pre_model=None,
-             outfile_path=None, fieldnames=None, epoch=None, ema=False):
+def validate(model, loader, loss_fn, args, amp_autocast=suppress, log_suffix='', pre_model=None):
     batch_time_m = AverageMeter()
     losses_m = AverageMeter()
     top1_m = AverageMeter()
@@ -910,21 +926,6 @@ def validate(model, loader, loss_fn, args, amp_autocast=suppress, log_suffix='',
                     'Acc@5: {top5.val:>7.4f} ({top5.avg:>7.4f})'.format(
                         log_name, batch_idx, last_idx, batch_time=batch_time_m,
                         loss=losses_m, top1=top1_m, top5=top5_m))
-
-                with open(outfile_path, mode='a') as out_file:
-                    writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
-                    writer.writerow({'seed': args.seed,
-                                     'actfun': args.actfun,
-                                     'epoch': epoch,
-                                     'batch_idx': batch_idx,
-                                     'loss': losses_m.val,
-                                     'loss_avg': losses_m.avg,
-                                     'acc1': top1_m.val,
-                                     'acc1_avg': top1_m.avg,
-                                     'acc5': top5_m.val,
-                                     'acc5_avg': top5_m.avg,
-                                     'ema': ema
-                                     })
 
     metrics = OrderedDict([('loss', losses_m.avg), ('top1', top1_m.avg), ('top5', top5_m.avg)])
 
