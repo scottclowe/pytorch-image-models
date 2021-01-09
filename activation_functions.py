@@ -175,17 +175,17 @@ def get_combinact_actfuns(reduce_actfuns=False):
 def logistic_and_approx(z):
     return torch.where(
         (z < 0).all(dim=2),
-        z.sum(dim=2),
-        torch.min(z, dim=2).values,
-    )
+        z.sum(dim=2).type_as(z),
+        torch.min(z, dim=2).values.type_as(z),
+    ).type_as(z)
 
 
 def logistic_or_approx(z):
     return torch.where(
         (z > 0).all(dim=2),
-        z.sum(dim=2),
-        torch.max(z, dim=2).values,
-    )
+        z.sum(dim=2).type_as(z),
+        torch.max(z, dim=2).values.type_as(z),
+    ).type_as(z)
 
 
 def logistic_xnor_approx(z):
