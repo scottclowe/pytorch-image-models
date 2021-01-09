@@ -23,10 +23,7 @@ SAVE_PATH=~/pytorch-image-models/outputs/ef_swish2
 CHECK_PATH=/checkpoint/robearle/${SLURM_JOB_ID}
 IMGNET_PATH=/scratch/ssd001/datasets/imagenet/
 
-mkdir ~/pytorch-image-models/logs_new/ef_higher_ord
-mkdir $SAVE_PATH
 touch $CHECK_PATH
-wait
 
 # Debugging outputs
 pwd
