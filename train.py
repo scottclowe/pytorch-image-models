@@ -471,7 +471,7 @@ def main():
     amp_autocast = suppress  # do nothing
     loss_scaler = None
     if use_amp == 'apex':
-        model, optimizer = amp.initialize(model, optimizer, opt_level='O2')
+        model, optimizer = amp.initialize(model, optimizer, opt_level='O1')
         loss_scaler = ApexScaler()
         if args.local_rank == 0:
             _logger.info('Using NVIDIA APEX AMP. Training in mixed precision.')
