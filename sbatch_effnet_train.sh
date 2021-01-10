@@ -20,7 +20,7 @@ MULT="$3"
 SEED="$SLURM_ARRAY_TASK_ID"
 
 SAVE_PATH=~/pytorch-image-models/outputs/ef_higher_ord
-CHECK_PATH=/checkpoint/robearle/${SLURM_JOB_ID}
+CHECK_PATH="/checkpoint/$USER/${SLURM_JOB_ID}"
 IMGNET_PATH=/scratch/ssd001/datasets/imagenet/
 
 touch $CHECK_PATH

@@ -729,18 +729,6 @@ def main():
             eval_metrics = validate(model, loader_eval, validate_loss_fn, args, amp_autocast=amp_autocast,
                                     pre_model=pre_model)
 
-            if model_ema is not None and not args.model_ema_force_cpu:
-                if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
-                    distribute_bn(model_ema, args.world_size, args.dist_bn == 'reduce')
-                ema_eval_metrics = validate(
-                    model_ema.module, loader_eval, validate_loss_fn, args, amp_autocast=amp_autocast, log_suffix=' (EMA)',
-                    pre_model=pre_model)
-                eval_metrics = ema_eval_metrics
-
-            if lr_scheduler is not None:
-                # step LR for next epoch
-                lr_scheduler.step(epoch + 1, eval_metrics[eval_metric])
-
             with open(outfile_path, mode='a') as out_file:
                 writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
                 writer.writerow({'seed': args.seed,
@@ -751,8 +739,33 @@ def main():
                                  'eval_loss': eval_metrics['loss'],
                                  'eval_acc1': eval_metrics['top1'],
                                  'eval_acc5': eval_metrics['top5'],
-                                 'ema': model_ema is not None and not args.model_ema_force_cpu
+                                 'ema': False
                                  })
+
+            if model_ema is not None and not args.model_ema_force_cpu:
+                if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
+                    distribute_bn(model_ema, args.world_size, args.dist_bn == 'reduce')
+                ema_eval_metrics = validate(
+                    model_ema.module, loader_eval, validate_loss_fn, args, amp_autocast=amp_autocast, log_suffix=' (EMA)',
+                    pre_model=pre_model)
+                eval_metrics = ema_eval_metrics
+
+                with open(outfile_path, mode='a') as out_file:
+                    writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
+                    writer.writerow({'seed': args.seed,
+                                     'actfun': args.actfun,
+                                     'epoch': epoch,
+                                     'lr': train_metrics['lr'],
+                                     'train_loss': train_metrics['loss'],
+                                     'eval_loss': eval_metrics['loss'],
+                                     'eval_acc1': eval_metrics['top1'],
+                                     'eval_acc5': eval_metrics['top5'],
+                                     'ema': True
+                                     })
+
+            if lr_scheduler is not None:
+                # step LR for next epoch
+                lr_scheduler.step(epoch + 1, eval_metrics[eval_metric])
 
             update_summary(
                 args.seed, epoch, args.lr, args.epochs, args.batch_size, args.actfun,
