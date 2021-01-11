@@ -686,7 +686,7 @@ def main():
         with open(os.path.join(output_dir, 'args.yaml'), 'w') as f:
             f.write(args_text)
 
-    fieldnames = ['seed', 'actfun', 'epoch', 'lr', 'train_loss', 'eval_loss', 'eval_acc1', 'eval_acc5' 'ema']
+    fieldnames = ['seed', 'actfun', 'epoch', 'lr', 'train_loss', 'eval_loss', 'eval_acc1', 'eval_acc5', 'ema']
     filename = 'output'
     if args.actfun != 'swish':
         filename = '{}_'.format(args.actfun) + filename
