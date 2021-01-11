@@ -322,6 +322,8 @@ def main():
         args.amp = True
     elif args.control_amp == 'apex':
         args.apex_amp = True
+    elif args.control_amp == 'native':
+        args.native_amp = True
 
     # resolve AMP arguments based on PyTorch / Apex availability
     use_amp = None
