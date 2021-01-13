@@ -484,7 +484,7 @@ def _init_weight_orthogonal(m, n=''):
 def efficientnet_init_weights(model: nn.Module, init_fn=None):
     if init_fn is None or init_fn is "" or init_fn is "goog":
         _init_weight_goog
-    elif init_fn is "orthogonal":
+    elif init_fn == "orthogonal":
         init_fn = _init_weight_orthogonal
     for n, m in model.named_modules():
         init_fn(m, n)
