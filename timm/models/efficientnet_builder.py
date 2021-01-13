@@ -270,6 +270,8 @@ class EfficientNetBuilder:
         ba['pad_type'] = self.pad_type
         # block act fn overrides the model default
         ba['act_layer'] = ba['act_layer'] if ba['act_layer'] is not None else self.act_layer
+        ba['act_layer2'] = self.act_layer2
+        ba['partial_ho_actfun'] = self.partial_ho_actfun
         assert ba['act_layer'] is not None
         if bt == 'ir':
             ba['drop_path_rate'] = drop_path_rate

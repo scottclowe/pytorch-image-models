@@ -131,7 +131,7 @@ class SqueezeExcite(nn.Module):
 class ConvBnAct(nn.Module):
     def __init__(self, in_chs, out_chs, kernel_size,
                  stride=1, dilation=1, pad_type='', act_layer=nn.ReLU,
-                 norm_layer=nn.BatchNorm2d, norm_kwargs=None):
+                 norm_layer=nn.BatchNorm2d, norm_kwargs=None, act_layer2=None, partial_ho_actfun=None):
         super(ConvBnAct, self).__init__()
         norm_kwargs = norm_kwargs or {}
         self.conv = create_conv2d(in_chs, out_chs, kernel_size, stride=stride, dilation=dilation, padding=pad_type)
@@ -160,7 +160,8 @@ class DepthwiseSeparableConv(nn.Module):
     def __init__(self, in_chs, out_chs, dw_kernel_size=3,
                  stride=1, dilation=1, pad_type='', act_layer=nn.ReLU, noskip=False,
                  pw_kernel_size=1, pw_act=False, se_ratio=0., se_kwargs=None,
-                 norm_layer=nn.BatchNorm2d, norm_kwargs=None, drop_path_rate=0.):
+                 norm_layer=nn.BatchNorm2d, norm_kwargs=None, drop_path_rate=0.,
+                 act_layer2=None, partial_ho_actfun=None):
         super(DepthwiseSeparableConv, self).__init__()
         norm_kwargs = norm_kwargs or {}
         has_se = se_ratio is not None and se_ratio > 0.
@@ -225,7 +226,7 @@ class InvertedResidual(nn.Module):
                  stride=1, dilation=1, pad_type='', act_layer=nn.ReLU, noskip=False,
                  exp_ratio=1.0, exp_kernel_size=1, pw_kernel_size=1,
                  se_ratio=0., se_kwargs=None, norm_layer=nn.BatchNorm2d, norm_kwargs=None,
-                 conv_kwargs=None, drop_path_rate=0.):
+                 conv_kwargs=None, drop_path_rate=0., act_layer2=None, partial_ho_actfun=None):
         super(InvertedResidual, self).__init__()
         norm_kwargs = norm_kwargs or {}
         conv_kwargs = conv_kwargs or {}
@@ -255,6 +256,7 @@ class InvertedResidual(nn.Module):
 
         # Squeeze-and-excitation
         if has_se:
+            se_act_layer2 = act_layer2 if  partial_ho_actfun == 'se' else None
             se_kwargs = resolve_se_args(se_kwargs, in_chs, act_layer)
             self.se = SqueezeExcite(activations, se_ratio=se_ratio, **se_kwargs)
         else:
@@ -307,7 +309,7 @@ class CondConvResidual(InvertedResidual):
                  stride=1, dilation=1, pad_type='', act_layer=nn.ReLU, noskip=False,
                  exp_ratio=1.0, exp_kernel_size=1, pw_kernel_size=1,
                  se_ratio=0., se_kwargs=None, norm_layer=nn.BatchNorm2d, norm_kwargs=None,
-                 num_experts=0, drop_path_rate=0.):
+                 num_experts=0, drop_path_rate=0., act_layer2=None, partial_ho_actfun=None):
 
         self.num_experts = num_experts
         conv_kwargs = dict(num_experts=self.num_experts)
@@ -359,7 +361,7 @@ class EdgeResidual(nn.Module):
     def __init__(self, in_chs, out_chs, exp_kernel_size=3, exp_ratio=1.0, fake_in_chs=0,
                  stride=1, dilation=1, pad_type='', act_layer=nn.ReLU, noskip=False, pw_kernel_size=1,
                  se_ratio=0., se_kwargs=None, norm_layer=nn.BatchNorm2d, norm_kwargs=None,
-                 drop_path_rate=0.):
+                 drop_path_rate=0., act_layer2=None, partial_ho_actfun=None):
         super(EdgeResidual, self).__init__()
         norm_kwargs = norm_kwargs or {}
         if fake_in_chs > 0:

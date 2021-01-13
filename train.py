@@ -355,8 +355,9 @@ def main():
         'g: {}\n'
         'Extra channel multiplier: {}\n'
         'AMP: {}\n'
+        'Weight Init: {}\n'
         '\n===================='.format(args.actfun, args.lr, args.epochs, args.p, args.k, args.g,
-                                        args.extra_channel_mult, use_amp))
+                                        args.extra_channel_mult, use_amp, args.weight_init))
 
     torch.manual_seed(args.seed + args.rank)
 
@@ -700,7 +701,7 @@ def main():
         with open(os.path.join(output_dir, 'args.yaml'), 'w') as f:
             f.write(args_text)
 
-    fieldnames = ['seed', 'actfun', 'epoch', 'lr', 'train_loss', 'eval_loss', 'eval_acc1', 'eval_acc5', 'ema']
+    fieldnames = ['seed', 'weight_init', 'actfun', 'epoch', 'lr', 'train_loss', 'eval_loss', 'eval_acc1', 'eval_acc5', 'ema']
     filename = 'output'
     if args.actfun != 'swish':
         filename = '{}_'.format(args.actfun) + filename
@@ -767,6 +768,7 @@ def main():
                 with open(outfile_path, mode='a') as out_file:
                     writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
                     writer.writerow({'seed': args.seed,
+                                     'weight_init': args.weight_init,
                                      'actfun': args.actfun,
                                      'epoch': epoch,
                                      'lr': train_metrics['lr'],
