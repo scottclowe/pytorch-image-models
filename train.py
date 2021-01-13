@@ -732,7 +732,7 @@ def main():
                             }, check_path)
                 _logger.info('============ SAVED CHECKPOINT: Epoch {}'.format(epoch))
 
-            if epoch == 1 and cp_loaded is None:
+            if epoch == 0 and cp_loaded is None:
                 os.execv(sys.argv[0], sys.argv)
 
             if args.distributed:
