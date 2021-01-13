@@ -331,9 +331,10 @@ class EfficientNet(nn.Module):
 
     def __init__(self, block_args, num_classes=1000, num_features=1280, in_chans=3, stem_size=32,
                  channel_multiplier=1.0, channel_divisor=8, channel_min=None,
-                 output_stride=32, pad_type='', fix_stem=False, act_layer=nn.ReLU, drop_rate=0., drop_path_rate=0.,
-                 se_kwargs=None, norm_layer=nn.BatchNorm2d, norm_kwargs=None, global_pool='avg', actfun='swish',
-                 p=1, k=2, g=1, tl_layers=None, extra_channel_mult=1, weight_init_name=None):
+                 output_stride=32, pad_type='', fix_stem=False, act_layer=nn.ReLU, act_layer2=None, drop_rate=0.,
+                 drop_path_rate=0., se_kwargs=None, norm_layer=nn.BatchNorm2d, norm_kwargs=None, global_pool='avg',
+                 actfun='swish', p=1, k=2, g=1, tl_layers=None, extra_channel_mult=1, weight_init_name=None,
+                 partial_ho_actfun=''):
         super(EfficientNet, self).__init__()
         norm_kwargs = norm_kwargs or {}
 
@@ -359,7 +360,8 @@ class EfficientNet(nn.Module):
         # Middle stages (IR/ER/DS Blocks)
         builder = EfficientNetBuilder(
             channel_multiplier, channel_divisor, channel_min, output_stride, pad_type, act_layer, se_kwargs,
-            norm_layer, norm_kwargs, drop_path_rate, actfun=actfun, p=p, k=k, g=g, tl_layers=tl_layers, verbose=_DEBUG)
+            norm_layer, norm_kwargs, drop_path_rate, actfun=actfun, p=p, k=k, g=g, tl_layers=tl_layers,
+            partial_ho_actfun=partial_ho_actfun, act_layer2=act_layer2, verbose=_DEBUG)
         self.blocks = nn.Sequential(*builder(activations, block_args))
         self.feature_info = builder.features
         head_chs = builder.in_chs
@@ -718,18 +720,30 @@ def _gen_efficientnet(variant, channel_multiplier=1.0, depth_multiplier=1.0, pre
     g = kwargs['g']
     if actfun == 'swish' or actfun == 'nswish':
         act_layer = resolve_act_layer(kwargs, actfun)
+        act_layer2 = None
     else:
         act_layer = activation_functions.HigherOrderActivation
         act_layer.actfun = actfun
         act_layer.p = p
         act_layer.k = k
         act_layer.g = g
+        act_layer2 = None
+
+    if kwargs['partial_ho_actfun'] != '':
+        act_layer = resolve_act_layer(kwargs, 'nswish')
+        act_layer2 = activation_functions.HigherOrderActivation
+        act_layer2.actfun = actfun
+        act_layer2.p = p
+        act_layer2.k = k
+        act_layer2.g = g
+
     model_kwargs = dict(
         block_args=decode_arch_def(arch_def, depth_multiplier),
         num_features=round_channels(1280, channel_multiplier, 8, None),
         stem_size=32,
         channel_multiplier=channel_multiplier * kwargs['extra_channel_mult'],
         act_layer=act_layer,
+        act_layer2=act_layer2,
         norm_kwargs=resolve_bn_args(kwargs),
         **kwargs,
     )

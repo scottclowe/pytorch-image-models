@@ -278,6 +278,8 @@ parser.add_argument('--weight-init', type=str,
                     help='Weight init method')
 parser.add_argument('--load-path', default='', type=str, metavar='PATH',
                     help='Path for loading initial checkpoints')
+parser.add_argument('--partial_ho_actfun', default='', type=str,
+                    help='Tells network when to apply higher order activations only to specific blocks')
 
 
 def _parse_args():
@@ -379,6 +381,7 @@ def main():
         tl_layers=args.tl_layers,
         extra_channel_mult=args.extra_channel_mult,
         weight_init_name=args.weight_init,
+        partial_ho_actfun=args.partial_ho_actfun
     )
 
     if args.tl:
@@ -403,6 +406,7 @@ def main():
             tl_layers=args.tl_layers,
             extra_channel_mult=args.extra_channel_mult,
             weight_init_name=args.weight_init,
+            partial_ho_actfun=args.partial_ho_actfun
         )
         model_new = create_model(
             args.model,
@@ -425,6 +429,7 @@ def main():
             tl_layers=args.tl_layers,
             extra_channel_mult=args.extra_channel_mult,
             weight_init_name=args.weight_init,
+            partial_ho_actfun=args.partial_ho_actfun
         )
         model_layers = list(model.children())
         model_new_layers = list(model_new.children())

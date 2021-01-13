@@ -222,13 +222,16 @@ class EfficientNetBuilder:
     def __init__(self, channel_multiplier=1.0, channel_divisor=8, channel_min=None,
                  output_stride=32, pad_type='', act_layer=None, se_kwargs=None,
                  norm_layer=nn.BatchNorm2d, norm_kwargs=None, drop_path_rate=0., feature_location='',
-                 verbose=False, actfun='swish', p=1, k=2, g=1, tl_layers=None):
+                 verbose=False, actfun='swish', p=1, k=2, g=1, tl_layers=None, partial_ho_actfun='',
+                 act_layer2=None):
         self.channel_multiplier = channel_multiplier
         self.channel_divisor = channel_divisor
         self.channel_min = channel_min
         self.output_stride = output_stride
         self.pad_type = pad_type
         self.act_layer = act_layer
+        self.act_layer2 = act_layer2
+        self.partial_ho_actfun = partial_ho_actfun
         self.se_kwargs = se_kwargs
         self.norm_layer = norm_layer
         self.norm_kwargs = norm_kwargs
