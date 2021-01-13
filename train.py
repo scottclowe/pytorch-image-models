@@ -736,29 +736,13 @@ def main():
                 _logger.info('============ SAVED CHECKPOINT: Epoch {}'.format(epoch))
 
             if epoch == 1 and not test_epoch:
-                cp_loaded = None
-                checkname = 'recover'
-                if args.actfun != 'swish':
-                    checkname = '{}_'.format(args.actfun) + checkname
-                check_path = os.path.join(args.check_path, checkname) + '.pth'
-                loader = None
                 if os.path.isfile(check_path):
                     loader = check_path
                 elif args.load_path != '' and os.path.isfile(args.load_path):
                     loader = args.load_path
                 if loader is not None:
                     cp_loaded = torch.load(loader)
-                    model.load_state_dict(cp_loaded['model'])
-                    optimizer.load_state_dict(cp_loaded['optimizer'])
-                    model.cuda()
-                    if use_amp == 'native':
-                        loss_scaler.load_state_dict(cp_loaded['amp'])
-                    elif use_amp == 'apex':
-                        amp.load_state_dict(cp_loaded['amp'])
-                    if args.native_amp or args.apex_amp:
-                        loss_scaler.load_state_dict(cp_loaded['amp'])
-                    if args.channels_last:
-                        model = model.to(memory_format=torch.channels_last)
+                    amp.load_state_dict(cp_loaded['amp'])
                     test_epoch = True
                     _logger.info('============ LOADED CHECKPOINT: Epoch {}'.format(resume_epoch))
 
