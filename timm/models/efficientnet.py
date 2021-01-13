@@ -716,8 +716,8 @@ def _gen_efficientnet(variant, channel_multiplier=1.0, depth_multiplier=1.0, pre
     p = kwargs['p']
     k = kwargs['k']
     g = kwargs['g']
-    if actfun == 'swish':
-        act_layer = resolve_act_layer(kwargs, 'swish')
+    if actfun == 'swish' or actfun == 'nswish':
+        act_layer = resolve_act_layer(kwargs, actfun)
     else:
         act_layer = activation_functions.HigherOrderActivation
         act_layer.actfun = actfun
