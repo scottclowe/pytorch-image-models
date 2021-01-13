@@ -522,7 +522,6 @@ def main():
 
     cp_loaded = None
     resume_epoch = None
-    test_epoch = False
     checkname = 'recover'
     if args.actfun != 'swish':
         checkname = '{}_'.format(args.actfun) + checkname
@@ -542,13 +541,9 @@ def main():
             loss_scaler.load_state_dict(cp_loaded['amp'])
         elif use_amp == 'apex':
             amp.load_state_dict(cp_loaded['amp'])
-        if args.native_amp or args.apex_amp:
-            loss_scaler.load_state_dict(cp_loaded['amp'])
         if args.channels_last:
             model = model.to(memory_format=torch.channels_last)
-        test_epoch = True
         _logger.info('============ LOADED CHECKPOINT: Epoch {}'.format(resume_epoch))
-
 
     model_raw = model
 
@@ -734,17 +729,6 @@ def main():
                             'amp': amp_loss
                             }, check_path)
                 _logger.info('============ SAVED CHECKPOINT: Epoch {}'.format(epoch))
-
-            if epoch == 1 and not test_epoch:
-                if os.path.isfile(check_path):
-                    loader = check_path
-                elif args.load_path != '' and os.path.isfile(args.load_path):
-                    loader = args.load_path
-                if loader is not None:
-                    cp_loaded = torch.load(loader)
-                    amp.load_state_dict(cp_loaded['amp'])
-                    test_epoch = True
-                    _logger.info('============ LOADED CHECKPOINT: Epoch {}'.format(resume_epoch))
 
             if args.distributed:
                 loader_train.sampler.set_epoch(epoch)
