@@ -167,12 +167,15 @@ class DepthwiseSeparableConv(nn.Module):
         has_se = se_ratio is not None and se_ratio > 0.
         self.has_residual = (stride == 1 and in_chs == out_chs) and not noskip
         self.has_pw_act = pw_act  # activation after point-wise conv
+        if partial_ho_actfun == 'dw':
+            self.has_pw_act = False
         self.drop_path_rate = drop_path_rate
 
         self.conv_dw = create_conv2d(
             in_chs, in_chs, dw_kernel_size, stride=stride, dilation=dilation, padding=pad_type, depthwise=True)
         self.bn1 = norm_layer(in_chs, **norm_kwargs)
-        self.act1 = act_layer(inplace=True)
+        curr_act = act_layer2 if partial_ho_actfun == 'dw' else act_layer(inplace=True)
+        self.act1 = curr_act
         activations = in_chs
         if isinstance(self.act1, activation_functions.HigherOrderActivation):
             self.act1.init_shuffle_maps(in_chs)
@@ -180,14 +183,16 @@ class DepthwiseSeparableConv(nn.Module):
 
         # Squeeze-and-excitation
         if has_se:
-            se_kwargs = resolve_se_args(se_kwargs, in_chs, act_layer)
+            curr_act = act_layer2 if partial_ho_actfun == 'se' else act_layer
+            se_kwargs = resolve_se_args(se_kwargs, in_chs, curr_act)
             self.se = SqueezeExcite(activations, se_ratio=se_ratio, **se_kwargs)
         else:
             self.se = None
 
         self.conv_pw = create_conv2d(activations, out_chs, pw_kernel_size, padding=pad_type)
         self.bn2 = norm_layer(out_chs, **norm_kwargs)
-        self.act2 = act_layer(inplace=True) if self.has_pw_act else nn.Identity()
+        curr_act = act_layer2 if partial_ho_actfun == 'pw' else act_layer(inplace=True)
+        self.act2 = curr_act if self.has_pw_act else nn.Identity()
         if isinstance(self.act2, activation_functions.HigherOrderActivation):
             self.act2.init_shuffle_maps(out_chs)
 
@@ -234,11 +239,13 @@ class InvertedResidual(nn.Module):
         has_se = se_ratio is not None and se_ratio > 0.
         self.has_residual = (in_chs == out_chs and stride == 1) and not noskip
         self.drop_path_rate = drop_path_rate
+        has_pw_act = False if partial_ho_actfun == 'dw' else True
 
         # Point-wise expansion
         self.conv_pw = create_conv2d(in_chs, mid_chs, exp_kernel_size, padding=pad_type, **conv_kwargs)
         self.bn1 = norm_layer(mid_chs, **norm_kwargs)
-        self.act1 = act_layer(inplace=True)
+        curr_act = act_layer2 if partial_ho_actfun == 'pw' else act_layer(inplace=True)
+        self.act1 = curr_act if has_pw_act else nn.Identity()
         activations = mid_chs
         if isinstance(self.act1, activation_functions.HigherOrderActivation):
             self.act1.init_shuffle_maps(mid_chs)
@@ -249,15 +256,16 @@ class InvertedResidual(nn.Module):
             activations, activations, dw_kernel_size, stride=stride, dilation=dilation,
             padding=pad_type, depthwise=True, **conv_kwargs)
         self.bn2 = norm_layer(activations, **norm_kwargs)
-        self.act2 = act_layer(inplace=True)
+        curr_act = act_layer2 if partial_ho_actfun == 'dw' else act_layer(inplace=True)
+        self.act2 = curr_act
         if isinstance(self.act2, activation_functions.HigherOrderActivation):
             self.act2.init_shuffle_maps(mid_chs)
             activations = int(self.act2.get_actfun_multiplier() * activations)
 
         # Squeeze-and-excitation
         if has_se:
-            se_act_layer2 = act_layer2 if  partial_ho_actfun == 'se' else None
-            se_kwargs = resolve_se_args(se_kwargs, in_chs, act_layer)
+            curr_act = act_layer2 if partial_ho_actfun == 'se' else act_layer
+            se_kwargs = resolve_se_args(se_kwargs, in_chs, curr_act)
             self.se = SqueezeExcite(activations, se_ratio=se_ratio, **se_kwargs)
         else:
             self.se = None
@@ -379,7 +387,8 @@ class EdgeResidual(nn.Module):
 
         # Squeeze-and-excitation
         if has_se:
-            se_kwargs = resolve_se_args(se_kwargs, in_chs, act_layer)
+            curr_act = act_layer2 if partial_ho_actfun == 'se' else act_layer
+            se_kwargs = resolve_se_args(se_kwargs, in_chs, curr_act)
             self.se = SqueezeExcite(mid_chs, se_ratio=se_ratio, **se_kwargs)
         else:
             self.se = None
