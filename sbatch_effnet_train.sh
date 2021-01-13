@@ -19,7 +19,7 @@ AMP="$2"
 MULT="$3"
 SEED="$SLURM_ARRAY_TASK_ID"
 
-SAVE_PATH=~/pytorch-image-models/outputs/nef_full
+SAVE_PATH=~/pytorch-image-models/outputs/nef_full2
 CHECK_PATH="/checkpoint/$USER/${SLURM_JOB_ID}"
 IMGNET_PATH=/scratch/ssd001/datasets/imagenet/
 

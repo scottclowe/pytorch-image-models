@@ -537,10 +537,7 @@ def main():
         optimizer.load_state_dict(cp_loaded['optimizer'])
         resume_epoch = cp_loaded['epoch']
         model.cuda()
-        if use_amp == 'native':
-            loss_scaler.load_state_dict(cp_loaded['amp'])
-        elif use_amp == 'apex':
-            amp.load_state_dict(cp_loaded['amp'])
+        loss_scaler.load_state_dict(cp_loaded['amp'])
         if args.channels_last:
             model = model.to(memory_format=torch.channels_last)
         _logger.info('============ LOADED CHECKPOINT: Epoch {}'.format(resume_epoch))
@@ -570,6 +567,9 @@ def main():
                 _logger.info("Using native Torch DistributedDataParallel.")
             model = NativeDDP(model, device_ids=[args.local_rank])  # can use device str in Torch >= 1.1
         # NOTE: EMA model does not need to be wrapped by DDP
+
+    if use_amp == 'apex' and cp_loaded is not None:
+        amp.load_state_dict(cp_loaded['amp'])
 
     # setup learning rate schedule and starting epoch
     lr_scheduler, num_epochs = create_scheduler(args, optimizer)
@@ -729,6 +729,10 @@ def main():
                             'amp': amp_loss
                             }, check_path)
                 _logger.info('============ SAVED CHECKPOINT: Epoch {}'.format(epoch))
+
+            if epoch == 1 and cp_loaded is None:
+                main()
+                break
 
             if args.distributed:
                 loader_train.sampler.set_epoch(epoch)
