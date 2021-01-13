@@ -523,7 +523,7 @@ def main():
         model.load_state_dict(cp_loaded['model'])
         optimizer.load_state_dict(cp_loaded['optimizer'])
         resume_epoch = cp_loaded['epoch']
-        if args.amp:
+        if args.native_amp or args.apex_amp:
             loss_scaler.load_state_dict(cp_loaded['amp'])
         model.cuda()
         if args.channels_last:
@@ -703,7 +703,7 @@ def main():
 
             if os.path.exists(args.check_path):
                 amp_loss = None
-                if args.amp:
+                if args.native_amp or args.apex_amp:
                     amp_loss = loss_scaler.state_dict()
                 torch.save({'model': model_raw.state_dict(),
                             'model_ema': model_ema.state_dict(),
