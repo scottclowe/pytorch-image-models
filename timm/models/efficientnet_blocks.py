@@ -174,7 +174,7 @@ class DepthwiseSeparableConv(nn.Module):
         self.conv_dw = create_conv2d(
             in_chs, in_chs, dw_kernel_size, stride=stride, dilation=dilation, padding=pad_type, depthwise=True)
         self.bn1 = norm_layer(in_chs, **norm_kwargs)
-        curr_act = act_layer2 if partial_ho_actfun == 'dw' else act_layer(inplace=True)
+        curr_act = act_layer2() if partial_ho_actfun == 'dw' else act_layer(inplace=True)
         self.act1 = curr_act
         activations = in_chs
         if isinstance(self.act1, activation_functions.HigherOrderActivation):
@@ -191,7 +191,7 @@ class DepthwiseSeparableConv(nn.Module):
 
         self.conv_pw = create_conv2d(activations, out_chs, pw_kernel_size, padding=pad_type)
         self.bn2 = norm_layer(out_chs, **norm_kwargs)
-        curr_act = act_layer2 if partial_ho_actfun == 'pw' else act_layer(inplace=True)
+        curr_act = act_layer2() if partial_ho_actfun == 'pw' else act_layer(inplace=True)
         self.act2 = curr_act if self.has_pw_act else nn.Identity()
         if isinstance(self.act2, activation_functions.HigherOrderActivation):
             self.act2.init_shuffle_maps(out_chs)
@@ -244,7 +244,7 @@ class InvertedResidual(nn.Module):
         # Point-wise expansion
         self.conv_pw = create_conv2d(in_chs, mid_chs, exp_kernel_size, padding=pad_type, **conv_kwargs)
         self.bn1 = norm_layer(mid_chs, **norm_kwargs)
-        curr_act = act_layer2 if partial_ho_actfun == 'pw' else act_layer(inplace=True)
+        curr_act = act_layer2() if partial_ho_actfun == 'pw' else act_layer(inplace=True)
         self.act1 = curr_act if has_pw_act else nn.Identity()
         activations = mid_chs
         if isinstance(self.act1, activation_functions.HigherOrderActivation):
@@ -256,7 +256,7 @@ class InvertedResidual(nn.Module):
             activations, activations, dw_kernel_size, stride=stride, dilation=dilation,
             padding=pad_type, depthwise=True, **conv_kwargs)
         self.bn2 = norm_layer(activations, **norm_kwargs)
-        curr_act = act_layer2 if partial_ho_actfun == 'dw' else act_layer(inplace=True)
+        curr_act = act_layer2() if partial_ho_actfun == 'dw' else act_layer(inplace=True)
         self.act2 = curr_act
         if isinstance(self.act2, activation_functions.HigherOrderActivation):
             self.act2.init_shuffle_maps(mid_chs)
