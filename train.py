@@ -23,6 +23,8 @@ from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime
 import csv
+import os
+import sys
 
 import torch
 import torch.nn as nn
@@ -729,6 +731,9 @@ def main():
                             'amp': amp_loss
                             }, check_path)
                 _logger.info('============ SAVED CHECKPOINT: Epoch {}'.format(epoch))
+
+            if epoch == 1 and cp_loaded is None:
+                os.execv(sys.argv[0], sys.argv)
 
             if args.distributed:
                 loader_train.sampler.set_epoch(epoch)
