@@ -2,14 +2,14 @@
 #SBATCH -p t4v2
 #SBATCH --exclude=gpu102
 #SBATCH --exclude=gpu115
-#SBATCH --gres=gpu:8                        # request GPU(s)
-#SBATCH --qos=normal
+#SBATCH --gres=gpu:4                        # request GPU(s)
+#SBATCH --qos=high
 #SBATCH -c 32                                # number of CPU cores
 #SBATCH --mem=128G                           # memory per node
 #SBATCH --time=500:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0%1                    # array value
-#SBATCH --output=logs_new/nef_full2/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=nef_full2
+#SBATCH --output=logs_new/nef_full3/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=nef_full3
 
 source ~/.bashrc
 source activate ~/venvs/efficientnet_train
@@ -43,4 +43,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-./distributed_train.sh 8 $IMGNET_PATH --model efficientnet_b0 -b 64 --actfun $ACTFUN --output $SAVE_PATH --check-path $CHECK_PATH --sched step --epochs 450 --decay-epochs 2.4 --decay-rate .97 --opt rmsproptf --opt-eps .001 -j 4 --warmup-lr 1e-6 --weight-decay 1e-5 --drop 0.2 --drop-connect 0.2 --model-ema --model-ema-decay 0.9999 --aa original --remode pixel --reprob 0.2 --lr .032 --control-amp $AMP --extra-channel-mult $MULT --weight-init orthogonal
+./distributed_train.sh 4 $IMGNET_PATH --model efficientnet_b0 -b 64 --actfun $ACTFUN --output $SAVE_PATH --check-path $CHECK_PATH --sched step --epochs 450 --decay-epochs 2.4 --decay-rate .97 --opt rmsproptf --opt-eps .001 -j 4 --warmup-lr 1e-6 --weight-decay 1e-5 --drop 0.2 --drop-connect 0.2 --model-ema --model-ema-decay 0.9999 --aa original --remode pixel --reprob 0.2 --lr .032 --control-amp $AMP --extra-channel-mult $MULT --weight-init orthogonal
