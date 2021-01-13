@@ -522,6 +522,7 @@ def main():
 
     cp_loaded = None
     resume_epoch = None
+    test_epoch = False
     checkname = 'recover'
     if args.actfun != 'swish':
         checkname = '{}_'.format(args.actfun) + checkname
@@ -536,11 +537,16 @@ def main():
         model.load_state_dict(cp_loaded['model'])
         optimizer.load_state_dict(cp_loaded['optimizer'])
         resume_epoch = cp_loaded['epoch']
+        model.cuda()
+        if use_amp == 'native':
+            loss_scaler.load_state_dict(cp_loaded['amp'])
+        elif use_amp == 'apex':
+            amp.load_state_dict(cp_loaded['amp'])
         if args.native_amp or args.apex_amp:
             loss_scaler.load_state_dict(cp_loaded['amp'])
-        model.cuda()
         if args.channels_last:
             model = model.to(memory_format=torch.channels_last)
+        test_epoch = True
         _logger.info('============ LOADED CHECKPOINT: Epoch {}'.format(resume_epoch))
 
 
@@ -620,7 +626,7 @@ def main():
     if num_aug_splits > 1:
         dataset_train = AugMixDataset(dataset_train, num_splits=num_aug_splits)
 
-    # create data loaders w/ augmentation pipeiine
+    # create data loaders w/ augmentation pipeline
     train_interpolation = args.train_interpolation
     if args.no_aug or not train_interpolation:
         train_interpolation = data_config['interpolation']
@@ -716,8 +722,10 @@ def main():
 
             if os.path.exists(args.check_path):
                 amp_loss = None
-                if args.native_amp or args.apex_amp:
+                if use_amp == 'native':
                     amp_loss = loss_scaler.state_dict()
+                elif use_amp == 'apex':
+                    amp_loss = amp.state_dict()
                 torch.save({'model': model_raw.state_dict(),
                             'model_ema': model_ema.state_dict(),
                             'optimizer': optimizer.state_dict(),
@@ -726,6 +734,33 @@ def main():
                             'amp': amp_loss
                             }, check_path)
                 _logger.info('============ SAVED CHECKPOINT: Epoch {}'.format(epoch))
+
+            if epoch == 1 and not test_epoch:
+                cp_loaded = None
+                checkname = 'recover'
+                if args.actfun != 'swish':
+                    checkname = '{}_'.format(args.actfun) + checkname
+                check_path = os.path.join(args.check_path, checkname) + '.pth'
+                loader = None
+                if os.path.isfile(check_path):
+                    loader = check_path
+                elif args.load_path != '' and os.path.isfile(args.load_path):
+                    loader = args.load_path
+                if loader is not None:
+                    cp_loaded = torch.load(loader)
+                    model.load_state_dict(cp_loaded['model'])
+                    optimizer.load_state_dict(cp_loaded['optimizer'])
+                    model.cuda()
+                    if use_amp == 'native':
+                        loss_scaler.load_state_dict(cp_loaded['amp'])
+                    elif use_amp == 'apex':
+                        amp.load_state_dict(cp_loaded['amp'])
+                    if args.native_amp or args.apex_amp:
+                        loss_scaler.load_state_dict(cp_loaded['amp'])
+                    if args.channels_last:
+                        model = model.to(memory_format=torch.channels_last)
+                    test_epoch = True
+                    _logger.info('============ LOADED CHECKPOINT: Epoch {}'.format(resume_epoch))
 
             if args.distributed:
                 loader_train.sampler.set_epoch(epoch)
