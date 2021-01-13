@@ -730,10 +730,6 @@ def main():
                             }, check_path)
                 _logger.info('============ SAVED CHECKPOINT: Epoch {}'.format(epoch))
 
-            if epoch == 1 and cp_loaded is None:
-                main()
-                break
-
             if args.distributed:
                 loader_train.sampler.set_epoch(epoch)
 
