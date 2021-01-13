@@ -274,6 +274,8 @@ parser.add_argument('--control-amp', default='', type=str, metavar='PATH',
                     help='Allows user to specify whether or not we want to use amp')
 parser.add_argument('--extra-channel-mult', default=1.0, type=float, metavar='PATH',
                     help='Allows us to specify additional channel multiplier for higher order activations')
+parser.add_argument('--weight-init', type=str,
+                    help='Weight init method')
 parser.add_argument('--load-path', default='', type=str, metavar='PATH',
                     help='Path for loading initial checkpoints')
 
@@ -375,7 +377,8 @@ def main():
         k=args.k,
         g=args.g,
         tl_layers=args.tl_layers,
-        extra_channel_mult=args.extra_channel_mult
+        extra_channel_mult=args.extra_channel_mult,
+        weight_init_name=args.weight_init,
     )
 
     if args.tl:
@@ -397,7 +400,9 @@ def main():
             p=args.p,
             k=args.k,
             g=args.g,
-            tl_layers=args.tl_layers
+            tl_layers=args.tl_layers,
+            extra_channel_mult=args.extra_channel_mult,
+            weight_init_name=args.weight_init,
         )
         model_new = create_model(
             args.model,
@@ -417,7 +422,9 @@ def main():
             p=args.p,
             k=args.k,
             g=args.g,
-            tl_layers=args.tl_layers
+            tl_layers=args.tl_layers,
+            extra_channel_mult=args.extra_channel_mult,
+            weight_init_name=args.weight_init,
         )
         model_layers = list(model.children())
         model_new_layers = list(model_new.children())
