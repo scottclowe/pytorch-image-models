@@ -23,6 +23,13 @@ def swish_jit(x, inplace: bool = False):
 
 
 @torch.jit.script
+def nswish_jit(x, inplace: bool = False):
+    """Swish - Described in: https://arxiv.org/abs/1710.05941
+    """
+    return x.mul(x.sigmoid()).mul(1.676531339)
+
+
+@torch.jit.script
 def mish_jit(x, _inplace: bool = False):
     """Mish: A Self Regularized Non-Monotonic Neural Activation Function - https://arxiv.org/abs/1908.08681
     """
@@ -35,6 +42,14 @@ class SwishJit(nn.Module):
 
     def forward(self, x):
         return swish_jit(x)
+
+
+class NSwishJit(nn.Module):
+    def __init__(self, inplace: bool = False):
+        super(NSwishJit, self).__init__()
+
+    def forward(self, x):
+        return nswish_jit(x)
 
 
 class MishJit(nn.Module):

@@ -17,6 +17,18 @@ def swish(x, inplace: bool = False):
     return x.mul_(x.sigmoid()) if inplace else x.mul(x.sigmoid())
 
 
+_has_silu = 'silu' in dir(torch.nn.functional)
+
+if _has_silu:
+    def nswish(x, inplace: bool = False):
+        return F.silu(x).mul_(1.676531339) if inplace else F.silu(x).mul(1.676531339)
+else:
+    def nswish(x, inplace: bool = False):
+        """Normalized Swish
+        """
+        return x.mul_(x.sigmoid()).mul_(1.676531339) if inplace else x.mul(x.sigmoid()).mul(1.676531339)
+
+
 class Swish(nn.Module):
     def __init__(self, inplace: bool = False):
         super(Swish, self).__init__()
@@ -24,6 +36,15 @@ class Swish(nn.Module):
 
     def forward(self, x):
         return swish(x, self.inplace)
+
+
+class NSwish(nn.Module):
+    def __init__(self, inplace: bool = False):
+        super(NSwish, self).__init__()
+        self.inplace = inplace
+
+    def forward(self, x):
+        return nswish(x, self.inplace)
 
 
 def mish(x, inplace: bool = False):

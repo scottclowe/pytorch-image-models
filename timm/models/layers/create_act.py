@@ -14,6 +14,8 @@ _has_silu = 'silu' in dir(torch.nn.functional)
 _ACT_FN_DEFAULT = dict(
     silu=F.silu if _has_silu else swish,
     swish=F.silu if _has_silu else swish,
+    nsilu=nsilu,
+    nswish=nswish,
     mish=mish,
     relu=F.relu,
     relu6=F.relu6,
@@ -32,6 +34,8 @@ _ACT_FN_DEFAULT = dict(
 _ACT_FN_JIT = dict(
     silu=F.silu if _has_silu else swish_jit,
     swish=F.silu if _has_silu else swish_jit,
+    nsilu=nswish_jit,
+    nswish=nswish_jit,
     mish=mish_jit,
     hard_sigmoid=hard_sigmoid_jit,
     hard_swish=hard_swish_jit,
@@ -50,6 +54,8 @@ _ACT_FN_ME = dict(
 _ACT_LAYER_DEFAULT = dict(
     silu=nn.SiLU if _has_silu else Swish,
     swish=nn.SiLU if _has_silu else Swish,
+    nsilu=NSwish,
+    nswish=NSwish,
     mish=Mish,
     relu=nn.ReLU,
     relu6=nn.ReLU6,
@@ -69,6 +75,8 @@ _ACT_LAYER_DEFAULT = dict(
 _ACT_LAYER_JIT = dict(
     silu=nn.SiLU if _has_silu else SwishJit,
     swish=nn.SiLU if _has_silu else SwishJit,
+    nsilu=NSwishJit,
+    nswish=NSwishJit,
     mish=MishJit,
     hard_sigmoid=HardSigmoidJit,
     hard_swish=HardSwishJit,
@@ -100,6 +108,9 @@ def get_act_fn(name='relu'):
     if is_exportable() and name in ('silu', 'swish'):
         # FIXME PyTorch SiLU doesn't ONNX export, this is a temp hack
         return swish
+    if is_exportable() and name in ('nsilu', 'nswish'):
+        # FIXME PyTorch SiLU doesn't ONNX export, this is a temp hack
+        return nswish
     if not (is_no_jit() or is_exportable()):
         if name in _ACT_FN_JIT:
             return _ACT_FN_JIT[name]
@@ -119,6 +130,9 @@ def get_act_layer(name='relu'):
     if is_exportable() and name in ('silu', 'swish'):
         # FIXME PyTorch SiLU doesn't ONNX export, this is a temp hack
         return Swish
+    if is_exportable() and name in ('nsilu', 'nswish'):
+        # FIXME PyTorch SiLU doesn't ONNX export, this is a temp hack
+        return NSwish
     if not (is_no_jit() or is_exportable()):
         if name in _ACT_LAYER_JIT:
             return _ACT_LAYER_JIT[name]
