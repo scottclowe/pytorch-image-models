@@ -333,7 +333,7 @@ class EfficientNet(nn.Module):
                  channel_multiplier=1.0, channel_divisor=8, channel_min=None,
                  output_stride=32, pad_type='', fix_stem=False, act_layer=nn.ReLU, drop_rate=0., drop_path_rate=0.,
                  se_kwargs=None, norm_layer=nn.BatchNorm2d, norm_kwargs=None, global_pool='avg', actfun='swish',
-                 p=1, k=2, g=1, tl_layers=None, extra_channel_mult=1):
+                 p=1, k=2, g=1, tl_layers=None, extra_channel_mult=1, weight_init_name=None):
         super(EfficientNet, self).__init__()
         norm_kwargs = norm_kwargs or {}
 
@@ -374,7 +374,7 @@ class EfficientNet(nn.Module):
             self.activations = int(self.act2.get_actfun_multiplier() * num_features)
         self.global_pool, self.classifier = create_classifier(self.activations, self.num_classes, pool_type=global_pool)
 
-        efficientnet_init_weights(self)
+        efficientnet_init_weights(self, weight_init_name)
 
     def as_sequential(self):
         layers = [self.conv_stem, self.bn1, self.act1]
@@ -420,7 +420,7 @@ class EfficientNetFeatures(nn.Module):
     def __init__(self, block_args, out_indices=(0, 1, 2, 3, 4), feature_location='bottleneck',
                  in_chans=3, stem_size=32, channel_multiplier=1.0, channel_divisor=8, channel_min=None,
                  output_stride=32, pad_type='', fix_stem=False, act_layer=nn.ReLU, drop_rate=0., drop_path_rate=0.,
-                 se_kwargs=None, norm_layer=nn.BatchNorm2d, norm_kwargs=None):
+                 se_kwargs=None, norm_layer=nn.BatchNorm2d, norm_kwargs=None, weight_init_name=None):
         super(EfficientNetFeatures, self).__init__()
         norm_kwargs = norm_kwargs or {}
         self.drop_rate = drop_rate
@@ -440,7 +440,7 @@ class EfficientNetFeatures(nn.Module):
         self.feature_info = FeatureInfo(builder.features, out_indices)
         self._stage_out_idx = {v['stage']: i for i, v in enumerate(self.feature_info) if i in out_indices}
 
-        efficientnet_init_weights(self)
+        efficientnet_init_weights(self, weight_init_name)
 
         # Register feature extraction hooks with FeatureHooks helper
         self.feature_hooks = None
