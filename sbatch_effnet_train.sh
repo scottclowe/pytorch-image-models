@@ -43,7 +43,9 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-~/utilities/log_gpu_cpu_stats -l 0.5 -n 1 -t "${SAVE_PATH}/${SLURM_ARRAY_TASK_ID}_${SLURM_NODEID}_${SLURM_ARRAY_JOB_ID}_compute_usage.log"&
+~/utilities/log_gpu_cpu_stats -l 0.5 -n -1 "${SAVE_PATH}/${SLURM_ARRAY_TASK_ID}_${SLURM_NODEID}_${SLURM_ARRAY_JOB_ID}_compute_usage.log"&
 export LOGGER_PID="$!"
 
 ./distributed_train.sh 8 $IMGNET_PATH --model efficientnet_b0 -b 64 --actfun $ACTFUN --output $SAVE_PATH --check-path $CHECK_PATH --sched step --epochs 450 --decay-epochs 2.4 --decay-rate .97 --opt rmsproptf --opt-eps .001 -j 4 --warmup-lr 1e-6 --weight-decay 1e-5 --drop 0.2 --drop-connect 0.2 --model-ema --model-ema-decay 0.9999 --aa original --remode pixel --reprob 0.2 --lr .032 --control-amp $AMP --extra-channel-mult $MULT --weight-init orthogonal
+
+kill $LOGGER_PID

@@ -570,9 +570,6 @@ def main():
             model = NativeDDP(model, device_ids=[args.local_rank])  # can use device str in Torch >= 1.1
         # NOTE: EMA model does not need to be wrapped by DDP
 
-    if use_amp == 'apex' and cp_loaded is not None:
-        amp.load_state_dict(cp_loaded['amp'])
-
     # setup learning rate schedule and starting epoch
     lr_scheduler, num_epochs = create_scheduler(args, optimizer)
     start_epoch = 0
